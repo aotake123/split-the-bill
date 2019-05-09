@@ -11,27 +11,23 @@ debugLogStart();
 //変数定義
 $email = '';
 $pass = '';
-$pass_re = '';
 
 //POST通信の値を受け取る
 if(!empty($_POST)){
     $email = $_POST['email'];
     $pass = $_POST['pass'];
-    $pass_re = $_POST['pass_re'];
-
     //未入力チェック
     validRequired($email,'email');
     validRequired($pass,'pass');
-    //validRequired($pass_re,'pass_re');
     //Emailの最大文字数チェック
     validMaxLen($email,'email');
     //Email形式チェック
     validEmail($email,'email');
-    //Email重複チェック（セッション関数出来次第）
-    //validEmailDup();
+    //Email重複チェック
+    validEmailDup($email);
 
     //パスワードのバリデーションへ移行
-    if(!empty($err_msg)){
+    if(empty($err_msg)){
         //パスワードの最大最小文字数確認
         validMaxLen($pass,'pass');
         validMinLen($pass,'pass');
@@ -40,16 +36,18 @@ if(!empty($_POST)){
         //半角文字かチェック
         validHalf($pass,'pass');
 
-        if(!empty($err_msg)){
+        if(empty($err_msg)){
+            debug('バリデーションOK');
             try{
             //DB接続準備
             $dbh = dbConnect();
-            $sql = 'INSERT INTO (email,pass,create_date) VALUE (:email,:pass,:create_date)';
+            $sql = 'INSERT INTO users (email,pass,createDate) VALUE (:email,:pass,:createDate)';
             $data = array(':email' => $email, ':pass' => password_hash($pass,PASSWORD_DEFAULT),
-                          ':create_date' => date('Y-m-s H:m:s'));
+                          ':createDate' => date('Y-m-s H:m:s'));
 
             //クエリ実行
             $stmt = queryPost($dbh,$sql,$data);
+            debug('クエリ実行完了');
 
             //クエリ成功の場合
                 if($stmt){
@@ -66,7 +64,7 @@ if(!empty($_POST)){
                 }
 
             } catch(Exception $e){
-                error_log('クエリ失敗'. $e->getMessage());
+                error_log('エラーが発生しました'. $e->getMessage());
             }
         }
     }
@@ -83,33 +81,73 @@ require('head.php');
 <?php
 require('header.php');
 ?>
-
+    
     <!-- main -->
 
-    <main>
-      <section>
-        <div class="main_visual">
+    <main id="main">
+     
+     <div class="main_contents_wrap">
+
+      <section class="contents_left">
+        <div class="main_image">
           <div class="m_v_left">
-            <p>割り勘を簡単に<br />
+            <p class="catch_copy">割り勘を簡単に<br />
               サクッと済ませて、<br />
               楽しい共同生活をしよう</p>
           </div>
-          <div class="m_v_right">
-            <img src="" alt="">
+          <div class="m_i_right">
+            <img src="images/main_image.jpg"
+             class="main_image_jpg" alt="main_image">
           </div>
         </div>
       </section>
 
-      <section>
+      <section class="contents_right">
+        <div class="contents_right_wrap">
         <form class="form" action="" method="post">
-            <h2>新規登録はこちら</h2>
-            <label>Email</label>
-            <input type="text" name="email" value=""> 
-            <label>パスワード</label>
-            <input type="text" name="pass" value="">
-            <input type="submit" value="今すぐ登録">
+           <div class="form_title_wrap">
+               <div class="form_title_subject"><h2>新規登録はこちら</h2></div>
+           </div>
+           <div class="form_main">
+           <div class="form_main_wrap">
+           
+            <div class="area-msg">
+                <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
+            </div>
+
+            <label>
+            <span class="form_subtitle">Email</span>
+            <div class="form_input">
+                <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo $_POST['email']; ?>">
+            </div>
+            </label>
+            <div class="area-msg">
+                <?php if(!empty($_POST['email'])) echo $err_msg['email']; ?>
+            </div>
+            
+            <label>
+            <span class="form_subtitle">パスワード</span>
+            <div class="form_input">
+                <input type="password" name="pass" value="<?php if(!empty($_POST['pass'])) echo $_POST['pass']; ?>">
+            </div>
+            </label>
+            <div class="area-msg">
+                <?php if(!empty($_POST['pass'])) echo $err_msg['pass']; ?>
+            </div>
+            
+            </div>
+           </div>
+           
+            <div class="form_submit">            
+                <input type="submit" value="今すぐ登録">
+            </div>
+            
         </form>
-      </section>
+        </div>
+        </section>
+     
+     </div>
+
 
     </main>
 
