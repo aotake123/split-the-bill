@@ -6,7 +6,6 @@ body {
 
 h1,h2,h3,h4,h5,h6,p{
     margin: 0;
-    color: #1e1e1e1;
 }
 h1{
     display: inline;
@@ -175,13 +174,13 @@ header_last_wrap{
 }
 .contents_right_wrap{
     display: block;
-
 }
 
 /* form */
 
 .form{
     font-size: 14px;
+    margin-bottom: 20px;
     border-radius: 3px;
     border: 1px solid #bfbfbf;
 }
@@ -221,7 +220,7 @@ header_last_wrap{
 }
 .area-msg{
     font-size: 14px;
-    color: #red;
+    color: #FF0000;
 }
 .form_input{
     display: block;
@@ -238,7 +237,7 @@ header_last_wrap{
 .form_last_comment{
 	text-align: right;
 	color: #d19863;
-	font-size: 13px;
+	font-size: 15px;
 }
 .form_passRemind{
 	display: block;
@@ -302,7 +301,9 @@ input[type="submit"]:hover{
     background: #feca38;
     border: 1px solid #feca38;
 }
+
 .form a{
+    color: #976537;
 	text-decoration: none;
 }
 .form_remind a{
@@ -342,7 +343,7 @@ input[type="submit"]:hover{
 }
 .p_w_l_attention_off{
 	color: #FFFFFF;
-	background: #FFFFFF
+	background: #FFFFFF;
 	padding: 5px;
 	margin: 0 5px;
 	border-radius: 3px;
@@ -404,11 +405,14 @@ input[type="submit"]:hover{
 	margin-left: 30px;
 }
 .pay_separate_option{
-	padding-top: 22px;
+	padding-top: 25px;
 	padding-bottom: 15px;
 }
 .pay_detail{
 	font-size: 20px;
+}
+.pay_detail2{
+    margin-top: 30px;
 }
 .img_upload_btn{
 	padding: 15px;
@@ -436,8 +440,168 @@ input[type="submit"]:hover{
 	margin-left: 10px;
 	float: left;
 }
+.textarea_option{
+    width: 250px;
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
 .p_w_r_right{
 	float: left;
+}
+.detail_contents{
+	display: block;
+	font-size: 20px;
+	margin-top: 15px;
+}
+
+/* comment */
+.comment_form{
+    padding-left: 15px; 
+    overflow: hidden;
+}
+.form_input_option1{
+    width: 600px;
+    font-size: 17px;
+    float: left;
+}
+.comment_form{
+    margin: 15px;
+}
+#comment_submit {
+    font-size: 17px;
+    color: #1e1e1e;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: #bfbfbf;
+    border: 1px solid #686765;
+    width: 100px;
+}
+.comment_button{
+    float: left;
+    padding-left: 20px;
+}
+.comment_wrap{
+    margin: 0 15px;
+    padding: 15px;
+    overflow: hidden;
+}
+.comment_left{
+    float: left;
+}
+.comment_right{
+    float: left;
+    padding: 10px 15px 10px 15px;
+}
+.comment_right_top{
+    overflow: hidden;
+}
+.comment_right_bottom{
+    font-size: 16px;
+}
+.comment_name{
+    font-size: 18px;
+    float: left;
+}
+.comment_time{
+    font-size: 14px;
+    padding-top: 4px;
+    padding-left: 15px;
+    float: left;
+}
+
+/* table */
+.reco_wrap{
+    padding: 0 15px 0 15px;
+    width: 100%;
+    display: block;
+}
+.reco_option{
+    margin-bottom: 30px;
+}
+
+.record{
+    border: 1px solid #e2e1e1;
+    border-collapse: collapse;
+}
+
+th{
+    background: #f4f4f3;
+    font-size: 15px;
+}
+th,td{
+    padding: 5px 10px 5px 10px;
+    border: 1px solid #e2e1e1;
+    text-align: left;
+}
+.reco_date{
+    width: 75px;
+}
+.reco_title{
+    width: 130px;
+}
+.reco_total{
+    width: 45px;
+}
+.reco_main{
+    width: 85px;
+}
+.reco_sub{
+    width: 200px;
+}
+.reco_detail{
+    width: 70px;
+}
+
+/* graph */
+.prof_whole_left_graph{
+    font-size: 20px;
+    width: 100px;
+    text-align: right;
+	padding: 25px 20px 10px 0px;
+	float: left;
+}
+.graph{
+    float: left;
+    padding: 12px;
+}
+.graph1, .graph2, .graph3{
+    overflow: hidden;
+}
+.graph_left{
+    padding: 0 10px 0 0;
+    float: left;
+    overflow: hidden;
+}
+.graph_right{
+    height: 25px;
+    width: 200px;
+    border-left: 2px solid #bfbfbf; 
+    float: left;
+}
+.graph_title{
+    font-size: 15px;
+    float: left;
+}
+.graph_money{
+    width: 80px;
+    margin-left: 10px;
+    font-size: 17px;
+    float: left;
+}
+.graph1_main{
+    height: 100%;
+    padding: 2px 2px 2px 0;
+    background: #ffabe6;
+}
+.graph2_main{
+    height: 100%;
+    padding: 2px 2px 2px 0;
+    background: #76c3f7;
+}
+.graph3_main{
+    height: 100%;
+    padding: 2px 2px 2px 0;
+    background: #FF0000;
 }
 
 /* footer */
@@ -457,6 +621,6 @@ footer{
 .copywrite{
     font-size: 12px;
     width: 0 auto;
-    display: inline;
+    display: block;
     text-align: center;
 }
