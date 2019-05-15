@@ -104,33 +104,6 @@ require('header.php');
 
     </main>
 
-
-    <main>
-
-      <section>
-            <h2>パスワード再発行</h2>
-            <p>パスワード再発行用の認証キーを記載したメールを送信します</p>
-            <form action="" method="post">
-                <div class="area-msg">
-                    <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
-                </div>
-
-                <label>
-                Email
-                <input type="text" name="email" value="<?php if(!empty($_POST['eamil'])) echo $_POST['email']; ?>">
-                </label>
-                <div class="area-msg">
-                    <?php if(!empty($_POST['email'])) echo $err_msg['email']; ?>
-                </div>
-
-                <label>
-                    <input type="checkbox" name="pass_save">認証キーを送信する
-                </label>
-             </form>
-     </section>
-
-    </main>
-
     <!-- footer -->
 
 <?php
