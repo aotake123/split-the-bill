@@ -60,20 +60,27 @@ define('MSG06','半角英数字で入力してください');
 define('MSG07','エラーが発生しました');
 define('MSG08','既に登録されているメールアドレスです');
 
-define('MSG09','変更前のパスワードが違います');
-define('MSG10','変更前のパスワードと同じです');
+define('MSG09','パスワードがアンマッチです');
+define('MSG10','変更前のパスワードが違います');
+define('MSG11','変更前のパスワードと同じです');
+define('MSG12','認証キーが違います');
+define('MSG13','認証キーの有効時間を過ぎています');
+define('MSG14','文字で入力してください');
+
 define('SUC01','パスワードを変更しました');
 define('SUC02','プロフィールを変更しました');
 define('SUC03','メールを送信しました');
+define('SUC04','割り勘の申請を完了しました');
+define('SUC05','割り勘の支払い申請を完了しました');
 
 //グローバル関数
-$err_msg = "";
+$err_msg = null;
 
 //==============================
 //バリデーション関数
 //==============================
 //未入力検出
-function validRequire($str,$key){
+function validRequired($str,$key){
     if($str === ""){    //金額フォームなどを考えると数値の0はOKにし、空文字はダメにする
         global $err_msg;
         $err_msg[$key] = MSG01;         
@@ -88,7 +95,7 @@ function validMaxLen($str,$key,$max = 256){
 }     
 //最小文字数未到達確認
 function validMinLen($str,$key,$min = 6){
-     if($min > $mb_strlen($str)){
+     if($min > mb_strlen($str)){
         global $err_msg;
         $err_msg[$key] = MSG03;         
      } 
@@ -114,24 +121,50 @@ function validHalf($str,$key){
         $err_msg[$key] = MSG06;
     }
 }
+//固定長チェック（認証キー用）
+function validLength($str, $key, $len = 8){
+    if(mb_strlen($str) !== $len){
+        global $err_msg;
+        $err_msg[$key] = MSG14;
+    }
+}
+
+//パスワード総合チェックの関数（更新時に使用）
+function validPass($str,$key){
+    //半角英数字チェック
+    validHalf($str, $key);
+    //最大文字数チェック
+    validMaxLen($str, $key);
+    //最小文字数チェック
+    validMinLen($str, $key);
+}
 
 //Email重複確認関数
-//function validEmailDup($str,$key){
-    //try{
+function validEmailDup($str){
+    global $err_msg;
+    //例外処理
+    try{
    //DB接続準備
-    //$dbh = dbConnect();
-    //$sql = SELECT email FROM bill WHERE user_id （セッションの関数を作ってから再編集）
-    //$data = array(編集中);
-    
-    //クエリー実行
-    //querypost = ($dbh,$sql,$data);
-    //$stmt->fetch(確認中);
-    //return $stmt;
-    //} catch(Exception $e){
-        //error_log('クエリ失敗'. $e->getMessage());
-        //$err_msg['common'] = MSG07;
-    //}
-//}
+    $dbh = dbConnect();
+    //SQL文（クエリー作成）
+    $stmt = $dbh->prepare('SELECT count(*) FROM users WHERE email = :email AND isDelete = 0');
+    //プレースホルダに値をセットし、SQL文を実行
+    $stmt->execute(array(':email' => $str));
+    //クエリ結果の値を取得
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    //array_shift関数:配列の先頭を取り出す関数。
+    //クエリ結果は配列形式で入っているので、array_shiftで先頭を取り出して判定
+    if(!empty(array_shift($result))){
+        $err_msg['email'] = MSG08;
+    }   
+
+     } catch(Exception $e){
+        error_log('エラー発生'. $e->getMessage());
+        $err_msg['common'] = MSG07;
+    }
+}
+
+//selectboxのチェック（概要を確認した上で反映する）
 
 
 //==============================
@@ -159,18 +192,85 @@ function dbConnect(){
 }
 
 //クエリー実行関数
-function qureyPost($dbh,$sql,$data){
+function queryPost($dbh,$sql,$data){
     //クエリー作成
     $stmt = $dbh->prepare($sql);
     //プレースホルダに値をセットして、SQL文を実行
-    if(!$stmt->excute($data)){
+    if(!$stmt->execute($data)){
         debug('クエリに失敗しました。');
         debug('失敗したSQL'.print_r($stmt,true));
         $err_msg['common'] = MSG07;
         return 0;
     }else{
-        debug('クエリ成功'.print_r);
+        debug('クエリ成功');
         return $stmt;
+    }
+}
+function getUser($u_id){
+    debug('ユーザー情報を取得します。');
+    //例外処理
+    try{
+        //DBへ接続
+        $dbh = dbConnect();
+        //SQL文作成
+        $sql = 'SELECT * FROM users WHERE id = :u_id';
+        $data = array(':u_id' => $u_id);
+        //クエリ実行
+        $stmt = queryPost($dbh,$sql,$data);
+        
+        //クエリ結果のデータを1レコード返却
+        if($stmt){
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }else{
+            return false;
+        }
+        
+    } catch(Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
+function getGroup(){
+    debug('グループ一覧情報を取得します。');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = "SELECT * FROM group_name WHERE isDelete = 0";
+        $data = array();
+        //クエリ実行
+        $stmt = queryPost($dbh,$sql,$data);
+        //クエリ結果返却(回収)
+        if($stmt){
+            return $stmt->fetchALL();
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+        $err_msg['common'] = MSG07;
+    }
+}
+
+//==============================
+//メール送信
+//==============================
+
+function sendMail($from,$to,$subject,$comment){
+    if(!empty($to) && !empty($subject) && !empty($comment)){
+        //文字化けしないように設定（お決まりパターン）
+        mb_language("Japanese"); //現在使っている言語を設定する
+        mb_internal_encoding("UTF-8"); //内部の日本語をどうエンコーディング（機械が分かる言葉へ変換）するかを設計
+        
+        //メールを送信（送信結果はtrueかfalseで返ってくる）
+        $result = mb_send_mail($to, $subject, $comment, "From:".$from);
+        //送信結果を判定
+        if($result){
+            debug('メールを送信しました。');
+        }else{
+            debug('【エラー発生】メールの送信に失敗しました。');
+        }
     }
 }
 
@@ -187,3 +287,67 @@ function makeRandkey($length = 8){
     return $str;
 }
 
+//サニタイズ
+function sanitize($str){
+    return htmlspecialchars($str,ENT_QUOTES);
+}
+
+//フォーム入力保持
+function getFormData($str, $flg = false){
+    if($flg){
+        $method = $_GET;
+    }else{
+        $method = $_POST;
+    }
+    global $dbFormData;
+    //ユーザーデータがある場合
+    if(!empty($dbFormData)){
+        //フォームのエラーがある場合
+        if(!empty($err_msg[$str])){
+            //POSTにデータがある場合
+            if(isset($method[$str])){
+                return sanitize($method[$str]);
+            }else{
+                //ない場合（基本ありえない）はDBの情報を表示
+                return sanitize($dbFormData[$str]);
+            }
+        }else{
+            //POSTにデータがあり、DBの情報と違う場合
+            if(isset($method[$str]) && $method[$str] !== $dbFormData[$str]){
+                return sanitize($method[$str]);
+            }else{
+                return sanitize($dbFormData[$str]);
+            }
+        }
+    }else{
+        if(isset($method[$str])){
+            return sanitize($method[$str]);
+        }
+    }
+}
+
+//getsessionFlash
+
+//画像処理
+function uploadImg($file,$key){
+    debug('画像アップロード処理開始');
+    debug('FILE情報：'.print_r($file,true));
+
+    if(isset($file['error']) && is_int($file['error'])){
+        try{
+            //バリデーション
+            //$file['error']の値を確認。配列内には「UPLOAD_ERR_OK」などの定数が入っている
+            //UPLOAD_ERR_OK などのphpでファイルアップロード時に自動的に定義される
+            switch ($file['error']){
+                case UPLOAD_ERR_OK: // OK
+                    break;
+                case UPLOAD_ERR_NO_FILE:    //ファイル未選択の場合
+                    break;
+            }
+        } catch (RuntimeEvception $e){
+            debug($e->getMessage());
+            global $err_msg;
+            $err_msg[$key] = $e->getMessage();
+        }
+    }
+}
