@@ -37,9 +37,11 @@ if(!empty($_POST)){
 	$email = $_POST['email'];
 
 	//画像アップロードし、パスを文字列で格納
-	//$picture = ( !empty($_FILES['picture']['name']) ) ? uploadImg($_FILES['picture'],['picture']) : '';
+	$picture = ( !empty($_FILES['pic']['name']) ) ? uploadImg($_FILES['pic'],'pic') : '';
+	debug('$_FILES情報：'.print_r($_FILESe,true));
 	//画像をPOSTしてない（登録していない）が、DBには既に登録されている場合、DBのパスを入れて画像を表示する
-	//$picture = ( empty($picture) && !empty($dbFormData['pic']) ) ? $dbFormData['picture'] : $picture;
+	$picture = ( empty($picture) && !empty($dbFormData['pic']) ) ? $dbFormData['pic'] : $picture;
+	debug('picture情報：'.print_r($picture,true));
 
 	//DBの情報と入力情報が異なる場合にバリデーションを行う
 	if($dbFormData['nickname'] !== $nickname){
@@ -68,9 +70,9 @@ if(!empty($_POST)){
 				//DB接続関数
 				$dbh = dbConnect();
 				//if($edit_flg = 0){
-					$sql = 'UPDATE users SET nickname = :nickname, group_name = :group_name, email = :email
+					$sql = 'UPDATE users SET nickname = :nickname, group_name = :group_name, pic = :pic, email = :email
 									WHERE id = :u_id';
-					$data = array(':nickname' => $nickname, ':group_name' => $group_name, ':email' => $email, ':u_id' => $_SESSION['user_id']);
+					$data = array(':nickname' => $nickname, ':group_name' => $group_name, ':pic' => $picture, ':email' => $email, ':u_id' => $_SESSION['user_id']);
 				//}else{	新規と編集の必要性を確認
 					//$sql = '';
 					//$data = array();
@@ -108,7 +110,7 @@ require('header.php');
     <main id="main">
 
       <div class="main_1colum_wide2">
-        <form class="form" action="" method="post">
+        <form class="form" action="" method="post" enctype="multipart/form-data">
            <div class="form_title_wrap">
                <div class="form_title_subject"><h2>プロフィール編集</h2></div>
            </div>
@@ -144,12 +146,13 @@ require('header.php');
             	<div class="prof_whole_right">
             		<div class="img_wrap">
             			<div class="img_upload_left">
-            				<img src="" alt="profile" class="img_prev">
+            				<img src="<?php echo getFormData('pic'); ?>" alt="profile" class="img_prev">
 						</div>
             			<div class="img_upload_right">
 							<div class="img_upload_btn">
-         						アップロードしたい画像を選択
-          						<input type="hidden" name="MAX_FILE_SIZE" size="3145728">
+         						<!-- アップロードしたい画像を選択-->
+								  <input type="hidden" name="MAX_FILE_SIZE" size="3145728">
+								  <input type="file" name="pic" value="<?php echo getFormData('pic'); ?>">
           					</div>
            					<p class="img_comment">※イメージ画像・写真を設定できます</p>
             			</div>
@@ -169,7 +172,7 @@ require('header.php');
             		<div class="p_w_r_left">
 
 								<label class="<?php if(!empty($err_msg['group_name'])) echo 'err'; ?>">
-                             <select name="group_name">
+							 <select name="group_name">
                                 <option value="0" <?php if(empty(getFormData('group_name'))) echo 'selected="selected"'; ?>>▶︎選択してください</option>
                                 <?php
                                 foreach($dbGroupData as $key => $val){
@@ -199,7 +202,7 @@ require('header.php');
             	</div>
             	<div class="prof_whole_right">
             		<div class="p_w_r_left">
-                <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo $_POST['email']; ?>">
+                <input type="text" name="email" value="<?php echo getFormData('email'); ?>">
             		</div>
             		<div class="p_w_r_right"></div>
             	</div>
