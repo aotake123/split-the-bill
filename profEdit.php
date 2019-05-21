@@ -1,4 +1,99 @@
 <?php
+
+//共通関数・関数ファイル
+require('function.php');
+
+debug('「「「「「「「「「「「「「「「「「「「「「「「「「「');
+debug('プロフィール編集ページ');
+debug('「「「「「「「「「「「「「「「「「「「「「「「「「「');
+debugLogStart();
+
+//ログイン認証
+require('auth.php');
+
+//==============================
+// 画面処理
+//==============================
+
+//DBからユーザーデータを回収(そもそもの書き変える対象データの為）
+$dbFormData = getUser($_SESSION['user_id']);
+debug('取得したユーザー情報：'.print_r($dbFormData,true));
+
+//新規登録か編集か判別用フラグ
+$edit_flg = (empty($dbFormData)) ? false : true;
+//DBから所属グループデータを取得
+$dbGroupData = getGroup();
+debug('dbGroupData情報：'.print_r($dbGroupData,true));
+
+
+//POST通信の有無を確認
+if(!empty($_POST)){
+	debug('POST通信があります。');
+	debug('POST情報：'.print_r($_POST,true));
+
+	//POSTされた値を変数に代入
+	$nickname = $_POST['nickname'];
+	$group_name = $_POST['group_name'];
+	$email = $_POST['email'];
+
+	//画像アップロードし、パスを文字列で格納
+	//$picture = ( !empty($_FILES['picture']['name']) ) ? uploadImg($_FILES['picture'],['picture']) : '';
+	//画像をPOSTしてない（登録していない）が、DBには既に登録されている場合、DBのパスを入れて画像を表示する
+	//$picture = ( empty($picture) && !empty($dbFormData['pic']) ) ? $dbFormData['picture'] : $picture;
+
+	//DBの情報と入力情報が異なる場合にバリデーションを行う
+	if($dbFormData['nickname'] !== $nickname){
+		//ニックネームの最大文字数チェック
+		validMaxLen($nickname,'nickname');
+	}
+	if($dbFormData['group_name'] !== $group_name){
+		//所属グループ（未選択は認めない、新規項目による画面遷移有り）
+	}
+	if($dbFormData['email'] !== $email){
+		//Emailの最大文字数チェック
+		validMaxLen($email,'email');
+		if(empty($err_msg['email'])){
+			//Emailの重複チェックする
+			validEmailDup($email,'email');
+		}
+		//emailの形式チェック
+		validEmail($email,'email');
+		validRequired($email,'email');
+	}
+
+	if(empty($err_msg)){
+			//バリデーションOKです。
+			//例外処理
+			try{
+				//DB接続関数
+				$dbh = dbConnect();
+				//if($edit_flg = 0){
+					$sql = 'UPDATE users SET nickname = :nickname, group_name = :group_name, email = :email
+									WHERE id = :u_id';
+					$data = array(':nickname' => $nickname, ':group_name' => $group_name, ':email' => $email, ':u_id' => $_SESSION['user_id']);
+				//}else{	新規と編集の必要性を確認
+					//$sql = '';
+					//$data = array();
+
+				//クエリ実行関数
+					$stmt = queryPost($dbh,$sql,$data);
+					//クエリ成功の場合
+					if($stmt){
+						$_SESSION['msg_success'] = SUC02;
+						debug('マイページへ遷移します。');
+						header('Location:mypage.php'); //マイページへ
+					}
+			} catch(Exception $e){
+				error_log('エラー発生：' . $e->getMessage());
+				$err_msg['common'] = MSG07;
+			}
+	}
+}
+
+?>
+
+<?php
+$siteTitle = 'プロフィール編集画面 | 割り勘シェアハウス';
 require('head.php');
 ?>
    
@@ -33,7 +128,7 @@ require('header.php');
             	</div>
             	<div class="prof_whole_right">
             		<div class="p_w_r_left">
-                <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo $_POST['email']; ?>">
+                <input type="text" name="nickname" value="<?php echo getFormData('nickname'); ?>">
             		</div>
             		<div class="p_w_r_right"></div>
             	</div>
@@ -72,7 +167,24 @@ require('header.php');
             	</div>
             	<div class="prof_whole_right">
             		<div class="p_w_r_left">
-                <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo $_POST['email']; ?>">
+
+								<label class="<?php if(!empty($err_msg['group_name'])) echo 'err'; ?>">
+                             <select name="group_name">
+                                <option value="0" <?php if(empty(getFormData('group_name'))) echo 'selected="selected"'; ?>>▶︎選択してください</option>
+                                <?php
+                                foreach($dbGroupData as $key => $val){
+                                ?>
+                                <option value="<?php echo $val['id']?>" <?php if(getFormData('group_name')) echo 'selected="selected"'; ?>><?php echo $val['data'] ?></option>
+                                <?php echo $val['data']; ?>
+                                <?php
+                                }
+                                ?>
+                            </select>
+                        </label>
+                        <div class="area-msg">
+                            <?php if(!empty($err_msg['group_name'])) echo $err_msg['group_name']; ?>
+												</div>
+												
             		</div>
             		<div class="p_w_r_right"></div>
             	</div>
