@@ -261,7 +261,7 @@ header_last_wrap{
 	margin: 0 auto 80px auto;
 }
 
-input[type="text"],[type="password"],.form select{
+input[type="text"],[type="password"],.form_main select{
     font-size: 14px;
     padding: 15px 5px 15px 5px;
     width: 100%;
@@ -291,6 +291,10 @@ textarea{
 .form_cancel{
 	color: #FFFFFF;
 	text-align: center;
+}
+.form select{
+    height: 60px;
+    padding: 15px 5px 15px 5px;
 }
 
 input[type="checkbox"]{
