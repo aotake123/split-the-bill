@@ -60,7 +60,7 @@ if(!empty($_POST)){
                     $_SESSION['user_id'] = $dbh->LastInsertId();
 
                     debug('セッション変数の中身：'.print_r($_SESSION,true));
-                    header('Location:index.php'); //マイページへ
+                    header('Location:mypage.php'); //マイページへ
                 }
 
             } catch(Exception $e){
@@ -73,6 +73,7 @@ if(!empty($_POST)){
 ?>
 
 <?php
+$siteTitle = 'トップページ | 割り勘シェアハウス';
 require('head.php');
 ?>
    
