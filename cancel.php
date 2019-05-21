@@ -8,9 +8,39 @@ debug('退会ページ');
 debug('「「「「「「「「「「「「「「「「「「「「「「「「「「');
 debugLogStart();
 
+//ログイン認証
+require('auth.php');
+
+//==============================
+//画面処理
+//==============================
+//POST送信がされていた場合
+if(!empty($_POST)){
+    debug('POST通信があります');
+    //例外処理
+    try{
+        $dbh = dbConnect();
+        $sql = 'UPDATE users SET isDelete = 1 WHERE id = :u_id';
+        $data = array(':u_id' => $_SESSION['user_id']);
+        $stmt = queryPost($dbh,$sql,$data);
+        if($stmt){
+            session_destroy();
+            debug('セッション変数の中身'.print_r($_SESSION,true));
+            debug('TOPページへ遷移します');
+            header("Location:index.php");
+        }
+    } catch(Exception $e){
+        error_log('エラー発生：' .$e->getMessage());
+        $err_msg['common'] = MSG07;
+    }
+}
+debug('画面表示処理終了　<<<<<<<<<<<<<<<<<<<<<<');
+
+
 ?>
 
 <?php
+$siteTitle = '退会 | 割り勘シェアハウス';
 require('head.php');
 ?>
    
