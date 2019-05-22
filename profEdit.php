@@ -37,8 +37,8 @@ if(!empty($_POST)){
 	$email = $_POST['email'];
 
 	//画像アップロードし、パスを文字列で格納
-	$picture = ( !empty($_FILES['pic']['name']) ) ? uploadImg($_FILES['pic'],'pic') : '';
-	debug('$_FILES情報：'.print_r($_FILESe,true));
+	$picture = ( !empty($_FILES['pic']['name']) ) ? uploadImg($_FILES['pic'],'pic') : null;
+	debug('FILES情報：'.print_r($_FILES,true));
 	//画像をPOSTしてない（登録していない）が、DBには既に登録されている場合、DBのパスを入れて画像を表示する
 	$picture = ( empty($picture) && !empty($dbFormData['pic']) ) ? $dbFormData['pic'] : $picture;
 	debug('picture情報：'.print_r($picture,true));
