@@ -8,50 +8,104 @@ debug('パスワード認証キー発行ページ');
 debug('「「「「「「「「「「「「「「「「「「「「「「「「「「');
 debugLogStart();
 
-//ログイン認証
-//require('auth.php');
+//ログイン認証は、出来ない段階で訪れるページの為、行わない
+
+//SESSIONに認証キーがあるか確認、無ければリダイレクト
+if(empty($_SESSION['auth_key'])){
+    header("Location:passRemindSend.php");  //認証キー発行ページへ戻る
+}
 
 //==============================
 //パスワード再発行認証キー
 //==============================
-
-
-//変数定義
-$email = "";
-//POST通信の値を取得する
-$email = $_POST['email'];
-//バリデーション
+//POST通信が行なわれた時
 if(!empty($_POST)){
-    validRequired($email,'email');
+debug('POST情報が有ります。');
+debug('POST情報：'.print_r($_POST,true));
+
+//POST通信の値を取得する
+$auth_key = $_POST['auth'];
+
+//未入力チェック
+validRequired($auth_key,'auth');
+    //バリデーション開始
+    if(empty($err_msg)){
     
-    //バリデーションOK
-    //if(empty($err_msg)){
-        
-        //例外処理
-        //try{
-            //DB接続関数
-            //$dbh = dbConnect();
-            //$sql = '';
-            //$//data = array();
-            //クエリー実行関数
-            //queryPost($dbh,$sql,$data);
-            
-            //メール送信関数
-            //sendMail
-            
-            
-        //} catch(Exception $e){
-         //   error_log('エラー発生：' . $e->getMessage());
-        //}
-        
-    //}
-    
+        //固定長チェック
+        validRequired($auth_key,'auth');
+        //半角チェック
+        validHalf($auth_key,'auth');
+
+        if(empty($err_msg)) {
+            debug('バリデーションOK');
+
+            //セッションキー称号。エラーはタイムアウトとキーの相違
+            if($auth_key !== $_SESSION['auth_key']){
+                $err_msg['common'] = MSG12;
+            }
+            if(time() > $_SESSION['auth_key_limit']){
+                $err_msg['common'] = MSG13;
+            }
+
+            //うまくいったらもう一度パスワード発行
+            //開発中は表示
+            if(empty($err_msg)){
+                debug('認証OK');
+                $pass = makeRandKey();  //パスワード生成
+                debug('新規パスワード：'.$pass);    //開発中のみの表示
+
+                //Email探して作ったパスワード登録
+                //例外処理
+                try{
+                    $dbh = dbConnect();
+                    $sql = 'UPDATE users SET pass = :pass WHERE email = :email AND isDelete = 0';
+                    $data = array(':email' => $_SESSION['auth_email'], ':pass' => password_hash($pass,PASSWORD_DEFAULT));
+                    //クエリー実行関数
+                    $stmt = queryPost($dbh,$sql,$data);
+                    //クエリ成功したらメール送信関数
+                    if($stmt){
+                        $from = 'tasukuoki3@gmail.com';
+                        $to = $_SESSION['auth_email'];
+                        $subject = '【パスワード再発行完了】| 割り勘シェアハウス';
+                        $comment = <<<EOT
+本メールアドレス宛にパスワード再発行を致しました。
+下記のURLにて再発行パスワードをご入力頂き、ログインください。
+
+ログインページ：http://localhost:8888/splitbill/login.php
+再発行パスワード：{$pass}
+※ログイン後、パスワードの変更をお願いします
+
+///////////////////////////////////////////
+割り勘シェアハウス 管理事務局
+E-mail　tasukuoki3@gmail.com
+///////////////////////////////////////////
+EOT;
+                        sendmail($from,$to,$subject,$comment);
+                        //session消して画面を遷移
+                        session_unset();    //IDが無くなると下記のメッセージが表示されなくなるので消さない
+                        $_SESSION['msg_success'] = SUC03;
+                        debug('セッション変数の中身：'.print_r($_SESSION,ture));
+
+                        header("Location:login.php");
+                        }else{
+                            debug('クエリに失敗しました。');
+                            $err_msg['common'] = MSG07;
+                        }
+                
+                    } catch(Exception $e){
+                    error_log('エラー発生：' . $e->getMessage());
+                    $err_msg['common'] = MSG07;
+                    }
+            }
+        }
+    }
 }
 
 
 ?>
 
 <?php
+$siteTitle = 'パスワード認証 | 割り勘シェアハウス';
 require('head.php');
 ?>
    
@@ -84,11 +138,11 @@ require('header.php');
             <label>
             <span class="form_subtitle form_wide_option">認証キー</span>
             <div class="form_input form_wide_option">
-                <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo $_POST['email']; ?>">
+                <input type="password" name="auth" value="<?php if(!empty($_POST['auth'])) echo $_POST['auth']; ?>">
             </div>
             </label>
             <div class="area-msg">
-                <?php if(!empty($_POST['email'])) echo $err_msg['email']; ?>
+                <?php if(!empty($_POST['auth'])) echo $err_msg['auth']; ?>
             </div>
             
             </div>
