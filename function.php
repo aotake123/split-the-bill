@@ -253,6 +253,102 @@ function getGroup(){
     }
 }
 
+function getItem(){
+    debug('割り勘の項目リスト情報を取得します。');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = "SELECT * FROM item WHERE isDelete = 0";
+        $data = array();
+        //クエリ実行
+        $stmt = queryPost($dbh,$sql,$data);
+        //クエリ結果返却(回収)
+        if($stmt){
+            return $stmt->fetchALL();
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+        $err_msg['common'] = MSG07;
+    }
+}
+
+function getSplitbill($u_id,$s_id){
+    debug('割り勘固有情報を取得します');
+    debug('ユーザーID：'.$u_id);
+    debug('割り勘ID：'.$s_id);
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT * FROM payment WHERE users = :u_id AND id = :s_id AND isDelete = 0';
+        $data = array(':u_id' => $u_id, 's_id' => $s_id);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            //クエリ結果のデータを1レコード返却
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }else{
+            return false;
+        }
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
+function getMemberCount($u_id,$group_name){
+    debug('ログイン者の所属団体メンバーの人数を返します');
+    //debug('ユーザーID：'.$u_id);
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT * FROM users 
+        WHERE group_name = :group_name AND isDelete = 0';
+        $data = array(':group_name' => $group_name);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->rowCount(); //グループ人数
+
+        }else{
+            return false;
+        }
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
+function getMemberdata($u_id,$group_name){
+    debug('ログイン者の所属団体メンバーの情報を返します');
+    //debug('ユーザーID：'.$u_id);
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT * FROM users 
+        WHERE group_name = :group_name AND NOT id = :id AND isDelete = 0';
+        $data = array(':group_name' => $group_name, ':id' => $u_id);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->fetchAll(); //データ全て
+
+        }else{
+            return false;
+        }
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
+
 //==============================
 //メール送信
 //==============================
