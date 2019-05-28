@@ -332,7 +332,8 @@ function getMemberdata($u_id,$group_name){
         //DB接続
         $dbh = dbConnect();
         $sql = 'SELECT * FROM users 
-        WHERE group_name = :group_name AND NOT id = :id AND isDelete = 0';
+        WHERE group_name = :group_name AND isDelete = 0
+        ORDER BY id = :id DESC';
         $data = array(':group_name' => $group_name, ':id' => $u_id);
         //クエリ実行
         $stmt = queryPost($dbh, $sql, $data);
@@ -348,6 +349,96 @@ function getMemberdata($u_id,$group_name){
     }
 }
 
+function getSumTotalCost($u_id, $group_name, $isClaim){
+    debug('メンバー個人の申請した割り勘/支払いのtotalCostの合計情報を返します');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT SUM(totalCost) FROM payment 
+        WHERE group_name = :group_name 
+        AND users = :users 
+        AND isClaim = :isClaim
+        AND isDelete = 0
+        ';
+        $data = array(':group_name' => $group_name, 
+        ':users' => $u_id, 'isClaim' => $isClaim
+        );
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+
+        if($stmt){
+            return $stmt->fetchAll(); //データ全て
+
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
+function getSumUserCost($u_id, $group_name, $isClaim){
+    debug('メンバー個人の申請された割り勘/支払いのuserCostの合計情報を返します');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT SUM(splitBill) FROM usersPayment AS up 
+        INNER JOIN payment AS p ON up.payment = p.id2
+        WHERE group_name = :group_name 
+        AND up.users = :users 
+        AND up.isClaim = :isClaim
+        AND up.isDelete = 0 AND p.isDelete = 0
+        ';
+        $data = array(':group_name' => $group_name, 
+        ':users' => $u_id, ':isClaim' => $isClaim
+        );
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->fetchAll(); //データ全て
+
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
+function getMyNewBills($u_id, $group_name){
+    debug('ユーザーの最新5件の割り勘情報を返します');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT id,g_year,g_month,g_day,title,該当者if、総額、詳細get添付 FROM payment
+        WHERE users = :users
+        AND g_year = :g_year 
+        AND up.isClaim = :isClaim
+        AND isDelete = 0
+        ';
+        $data = array(':group_name' => $group_name, 
+        ':users' => $u_id, ':isClaim' => $isClaim
+        );
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->fetchAll(); //データ全て
+
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
 
 //==============================
 //メール送信
@@ -422,6 +513,40 @@ function getFormData($str, $flg = false){
         }
     }
 }
+
+function getBillFormData($str, $flg = false){
+    if($flg){
+        $method = $_GET;
+    }else{
+        $method = $_POST;
+    }
+    global $dbBillData;
+    //ユーザーデータがある場合
+    if(!empty($dbFormData)){
+        //フォームのエラーがある場合
+        if(!empty($err_msg[$str])){
+            //POSTにデータがある場合
+            if(isset($method[$str])){
+                return sanitize($method[$str]);
+            }else{
+                //ない場合（基本ありえない）はDBの情報を表示
+                return sanitize($dbBillData[$str]);
+            }
+        }else{
+            //POSTにデータがあり、DBの情報と違う場合
+            if(isset($method[$str]) && $method[$str] !== $dbBillData[$str]){
+                return sanitize($method[$str]);
+            }else{
+                return sanitize($dbBillData[$str]);
+            }
+        }
+    }else{
+        if(isset($method[$str])){
+            return sanitize($method[$str]);
+        }
+    }
+}
+
 
 //getsessionFlash
 
