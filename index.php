@@ -55,7 +55,7 @@ if(!empty($_POST)){
                     $sesLimit = 60*60;
                     //最終ログイン日時を現在日時に
                     $_SESSION['login_date'] = time();
-                    $_SESSION['login_limit'] = sesLimit;
+                    $_SESSION['login_limit'] = $sesLimit;
                     //ユーザーIDを格納
                     $_SESSION['user_id'] = $dbh->LastInsertId();
 
