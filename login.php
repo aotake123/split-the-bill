@@ -12,7 +12,6 @@ debugLogStart();
 $email = '';
 $pass = '';
 $pass_save = '';
-debug('変数定義');
 
 //POST通信の値を受け取る
 if(!empty($_POST)){
@@ -24,8 +23,6 @@ if(!empty($_POST)){
     validEmail($email,'email');
     //emailの最大文字数チェック
     validMaxLen($email,'email');
-debug('変数定義');
-
     
     //パスワードの半角英数字チェック
     validHalf($pass,'pass');
@@ -33,13 +30,10 @@ debug('変数定義');
     validMaxLen($pass,'pass');
     //パスワードの最小文字数チェック
     validMinLen($pass,'pass');
-debug('変数定義');
     
     //未入力チェック
     validRequired($email,'email');
     validRequired($pass,'pass');
-debug('変数定義');
-
     
     //バリデーションOK
     if(empty($err_msg)){
@@ -98,6 +92,7 @@ debug('変数定義');
 ?>
 
 <?php
+$siteTitle = 'ログイン | 割り勘シェアハウス';
 require('head.php');
 ?>
    
@@ -142,17 +137,24 @@ require('header.php');
             <div class="area-msg">
                 <?php if(!empty($_POST['pass'])) echo $err_msg['pass']; ?>
             </div>
+            <label>
+                <span class="form_subtitle">
+                <input type="checkbox" name="pass_save">次回から自動ログイン</span>
+            </label>
             
             </div>
            </div>
            
-            <label>
-                <input type="checkbox" name="pass_save">次回から自動ログイン
-            </label>
-           
-            <div class="form_submit">            
+            <div class="form_submit">
                 <input type="submit" value="ログイン">
             </div>
+
+            <div class="form_submit form_remind">
+            	<a href="passRemindSend.php">
+            	<div class="form_passRemind">
+					パスワードをお忘れの方はこちら
+				</div></a>
+			</div>
            
         </form>
             
