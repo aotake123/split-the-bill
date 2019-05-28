@@ -36,9 +36,21 @@
        <div class="header_last_wrap">
         <div class="h_l_tab">
           <ul class="h_l_tab_ul">
-            <li class="h_l_tab_li"><a href="index.php">トップ</a></li>
-            <li class="h_l_tab_li"><a href="payEditSeparate.php">割り勘の申請</a></li>
-            <li class="h_l_tab_li"><a href="payEditReturn.php">割り勘の支払い</a></li>
+            <li class="h_l_tab_li">
+            <?php
+           if(empty($_SESSION['user_id'])){
+            ?>
+            <a href="index.php">トップ</a>
+            <?php
+           }else{
+            ?>
+            <a href="mypage.php">マイページ</a>
+            <?php
+           }
+            ?>
+            </li>
+            <li class="h_l_tab_li"><a href="payEditSeparate.php">割り勘をする</a></li>
+            <li class="h_l_tab_li"><a href="payEditSeparate.php?isc_id=1">割り勘をされた</a></li>
             <li class="h_l_tab_li"><a href="payList.php">割り勘の一覧</a></li>
             <li class="h_l_tab_li"><a href="profEdit.php">プロフィール編集</a></li>
           </ul>
