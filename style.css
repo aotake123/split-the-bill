@@ -576,6 +576,9 @@ th,td{
     float: left;
     overflow: hidden;
 }
+.graph2 .graph_left{
+    border-bottom: 1px solid #686765;
+}
 .graph_right{
     height: 25px;
     width: 200px;
@@ -584,6 +587,8 @@ th,td{
 }
 .graph_title{
     font-size: 15px;
+    width: 105px;
+    text-align: right;
     float: left;
 }
 .graph_money{
@@ -605,7 +610,7 @@ th,td{
 .graph3_main{
     height: 100%;
     padding: 2px 2px 2px 0;
-    background: #FF0000;
+    background: #0000FF;
 }
 
 /* footer */
