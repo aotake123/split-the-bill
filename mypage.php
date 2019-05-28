@@ -11,14 +11,37 @@ debugLogStart();
 //ログイン認証
 require('auth.php');
 
-//画面表示用データ取得
+//==============================
+// マイページ画面処理
+//==============================
+// 画面表示用データ取得
+//==============================
+//自分のデータのみを抜粋する為のIDデータを取得
+$u_id = $_SESSION['user_id'];
+//今何月かを示す関数
+//$m_id = date(m);
+
+//各割り勘をリンク表示目的で判別する為のGETデータを格納
+$s_id = (!empty($_GET['s_id'])) ? $_GET['s_id'] : '';
+//ユーザーの個人データを取得
+$dbFormData = getUser($_SESSION['user_id']);
+//ユーザーの所属するグループの番号データを取得
+$group_name = $dbFormData['group_name'];
+//ユーザーの所属するグループメンバー全員の情報を取得（ユーザーが先頭）
+$dbMemberData = getMemberdata($_SESSION['user_id'],$group_name);
+
+//最新の割り勘表示機能
+//==============================
+//表示件数
+$listSpan = 10;
+//自分用の割り勘データを取得
+$myBillData = "";
 
 //自分の最新割勘のgetパラメータ
 //自分の最新コメントのgetパラメータ
 //割勘当月最新情報のDB回収配列
 //自分の最新割勘のDB回収配列
 //自分の最新コメントのDB回収配列
-
 
 ?>
 
@@ -47,45 +70,77 @@ require('header.php');
             <div class="area-msg">
                 <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
             </div>
+
+            <?php
+            foreach($dbMemberData as $key => $val):
+            ?>
+
+            <?php
+            //会計の売掛け金を集計して取得
+            $paySum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 0);
+            $paySum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 0);
+            //会計の買い掛け金を集計して取得
+            $catchSum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 1);
+            $catchSum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 1);
+            //数字単体のデータ
+            $paySum_range = $paySum1[0]['SUM(totalCost)']+$paySum2[0]['SUM(splitBill)'];
+            $catchSum_range = $catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)'];
+            $totalSum_range = -$paySum1[0]['SUM(totalCost)']-$paySum2[0]['SUM(splitBill)']+$catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)'];
+            $paySum_graph = ($paySum_range/15000)*200;
+            $catchSum_graph = ($catchSum_range/15000)*200;
+            $totalSum_graph = ($totalSum_range/15000)*200;
+            //15000円を超える会計が発生した場合、グラフ横幅を最大幅で固定
+            if($paySum_range > 15000){ $paySum_graph = 200;}
+            if($catchSum_range > 15000){ $catchSum_graph = 200;}
+            if($totalSum_range > 15000){ $totalSum_graph = 200;}
+            //totalが0円を下回る会計が発生した場合、値を反転させる
+            if($totalSum_range < 0){
+                $totalSum_graph = -($totalSum_range/15000)*200;
+            }
             
+
+            ?>
+
             <div class="prof_whole">
                 <div class="prof_whole_left_graph">
                     <div class="prof_whole_wrap">
-                        つなお
+                        <!-- メンバー名 --><?php echo $val['nickname']; ?>
                     </div>
                 </div>
                 <div class="prof_whole_right">
                     <div class="img_wrap">
                         <div class="img_upload_left">
-                            <img src="" alt="ログイン者の写真" class="img_prev">
+                            <img src="<?php echo $val['pic']; ?>" alt="profile" class="img_prev">
                         </div>
 
                         <div class="graph">
                             <div class="graph1">
                                 <div class="graph_left">
-                                    <p class="graph_title">立替金合計</p>
-                                    <p class="graph_money">11000円</p>
+                                    <p class="graph_title"> 割勘した金額
+                                    </p>
+                                    <p class="graph_money"><!-- 総額ここから --><?php print_r($paySum1[0]['SUM(totalCost)']+$paySum2[0]['SUM(splitBill)']); ?>円</p><!-- ここまで -->
+
                                 </div>
                                 <div class="graph_right">
-                                    <div class="graph1_main"></div>
+                                    <div class="graph1_main" style="width: <?php echo $paySum_graph ?>px;"></div>
                                 </div>
                             </div>
                             <div class="graph2">
                                 <div class="graph_left">
-                                    <p class="graph_title">未精算合計</p>
-                                    <p class="graph_money"> 4500円</p>
+                                    <p class="graph_title"> 割勘された金額</p>
+                                    <p class="graph_money"><!-- 総額ここから --><?php print_r($catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)']); ?>円</p><!-- ここまで -->
                                 </div>
                                 <div class="graph_right">
-                                    <div class="graph2_main"></div>
+                                    <div class="graph2_main" style="width: <?php echo $catchSum_graph; ?>px;"></div>
                                 </div>
                             </div>
                             <div class="graph3">
                                 <div class="graph_left">
-                                    <p class="graph_title">収支合計　</p>
-                                    <p class="graph_money"> 6500円</p>
+                                    <p class="graph_title">収支の合計</p>
+                                    <p class="graph_money"><!-- 総額ここから --><strong><?php print_r(-$paySum1[0]['SUM(totalCost)']-$paySum2[0]['SUM(splitBill)']+$catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)']); ?></strong>円</p><!-- ここまで -->
                                 </div>
                                 <div class="graph_right">
-                                    <div class="graph3_main"></div>
+                                    <div class="graph3_main" style="width: <?php echo $totalSum_graph ?>px; <?php if($totalSum_range < 0){ echo 'background: #FF0000;';} ?>"></div>
                                 </div>
                             </div>
                         </div>
@@ -93,154 +148,22 @@ require('header.php');
                     </div>
                     <div class="p_w_r_right"></div>
                 </div>
+
+
+
             </div>
+
+
+            <?php
+            endforeach;
+            ?>
             
-            <div class="prof_whole">
-                <div class="prof_whole_left_graph">
-                    <div class="prof_whole_wrap">
-                        あやね
-                    </div>
-                </div>
-                <div class="prof_whole_right">
-                    <div class="img_wrap">
-                        <div class="img_upload_left">
-                            <img src="" alt="ログイン者の写真" class="img_prev">
-                        </div>
-
-                        <div class="graph">
-                            <div class="graph1">
-                                <div class="graph_left">
-                                    <p class="graph_title">立替金合計</p>
-                                    <p class="graph_money">11000円</p>
-                                </div>
-                                <div class="graph_right">
-                                    <div class="graph1_main"></div>
-                                </div>
-                            </div>
-                            <div class="graph2">
-                                <div class="graph_left">
-                                    <p class="graph_title">未精算合計</p>
-                                    <p class="graph_money"> 4500円</p>
-                                </div>
-                                <div class="graph_right">
-                                    <div class="graph2_main"></div>
-                                </div>
-                            </div>
-                            <div class="graph3">
-                                <div class="graph_left">
-                                    <p class="graph_title">収支合計　</p>
-                                    <p class="graph_money"> 6500円</p>
-                                </div>
-                                <div class="graph_right">
-                                    <div class="graph3_main"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                    <div class="p_w_r_right"></div>
-                </div>
-            </div>
-
-            <div class="prof_whole">
-                <div class="prof_whole_left_graph">
-                    <div class="prof_whole_wrap">
-                        鈴木
-                    </div>
-                </div>
-                <div class="prof_whole_right">
-                    <div class="img_wrap">
-                        <div class="img_upload_left">
-                            <img src="" alt="ログイン者の写真" class="img_prev">
-                        </div>
-
-                        <div class="graph">
-                            <div class="graph1">
-                                <div class="graph_left">
-                                    <p class="graph_title">立替金合計</p>
-                                    <p class="graph_money">11000円</p>
-                                </div>
-                                <div class="graph_right">
-                                    <div class="graph1_main"></div>
-                                </div>
-                            </div>
-                            <div class="graph2">
-                                <div class="graph_left">
-                                    <p class="graph_title">未精算合計</p>
-                                    <p class="graph_money"> 4500円</p>
-                                </div>
-                                <div class="graph_right">
-                                    <div class="graph2_main"></div>
-                                </div>
-                            </div>
-                            <div class="graph3">
-                                <div class="graph_left">
-                                    <p class="graph_title">収支合計　</p>
-                                    <p class="graph_money"> 6500円</p>
-                                </div>
-                                <div class="graph_right">
-                                    <div class="graph3_main"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                    <div class="p_w_r_right"></div>
-                </div>
-            </div>
-
-            <div class="prof_whole">
-                <div class="prof_whole_left_graph">
-                    <div class="prof_whole_wrap">
-                        青木
-                    </div>
-                </div>
-                <div class="prof_whole_right">
-                    <div class="img_wrap">
-                        <div class="img_upload_left">
-                            <img src="" alt="ログイン者の写真" class="img_prev">
-                        </div>
-
-                        <div class="graph">
-                            <div class="graph1">
-                                <div class="graph_left">
-                                    <p class="graph_title">立替金合計</p>
-                                    <p class="graph_money">11000円</p>
-                                </div>
-                                <div class="graph_right">
-                                    <div class="graph1_main"></div>
-                                </div>
-                            </div>
-                            <div class="graph2">
-                                <div class="graph_left">
-                                    <p class="graph_title">未精算合計</p>
-                                    <p class="graph_money"> 4500円</p>
-                                </div>
-                                <div class="graph_right">
-                                    <div class="graph2_main"></div>
-                                </div>
-                            </div>
-                            <div class="graph3">
-                                <div class="graph_left">
-                                    <p class="graph_title">収支合計　</p>
-                                    <p class="graph_money"> 6500円</p>
-                                </div>
-                                <div class="graph_right">
-                                    <div class="graph3_main"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                    <div class="p_w_r_right"></div>
-                </div>
-            </div>
             
             </div>
             </div>
             
             <div class="prof_whole">
-                <p class="form_last_comment"><a href="payEdit.php">月毎の割り勘状況を確認する</a></p>
+                <p class="form_last_comment"><a href="payList.php">月毎の割り勘状況を確認する</a></p>
             </div>
 
         </form>
@@ -311,7 +234,7 @@ require('header.php');
             </div>
 
             <div class="prof_whole">
-                <p class="form_last_comment"><a href="payEdit.php">全ての割り勘を一覧で確認する</a></p>
+                <p class="form_last_comment"><a href="payList.php">全ての割り勘を一覧で確認する</a></p>
             </div>
                                     
         </form>
@@ -348,7 +271,7 @@ require('header.php');
                 <td class="reco_item">豚バラの細切れ肉</td>
                 <td class="reco_item">498円</td>
                 <td class="reco_item">つなお</td>
-                <td class="reco_item">ドンキのセール品とても安い</td>
+                <td class="reco_item">働いてもいいと思うんです</td>
                 <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
                 </tr>
 
@@ -357,7 +280,7 @@ require('header.php');
                 <td class="reco_item">豚バラの細切れ肉</td>
                 <td class="reco_item">498円</td>
                 <td class="reco_item">あやね</td>
-                <td class="reco_item">私の食費にはアリバイがある</td>
+                <td class="reco_item">今日はいい風が吹いている</td>
                 <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
                 </tr>
 
@@ -365,8 +288,8 @@ require('header.php');
                 <td class="reco_item">2019/4/27</td>
                 <td class="reco_item">豚バラの細切れ肉</td>
                 <td class="reco_item">498円</td>
-                <td class="reco_item">赤井</td>
-                <td class="reco_item">僕の恋人は、この肉さ</td>
+                <td class="reco_item">大木</td>
+                <td class="reco_item">肉を好きな人に悪い奴はいない</td>
                 <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
                 </tr>
 
