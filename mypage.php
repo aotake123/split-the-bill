@@ -18,8 +18,10 @@ require('auth.php');
 //==============================
 //自分のデータのみを抜粋する為のIDデータを取得
 $u_id = $_SESSION['user_id'];
+//DBから所属グループデータを取得(グループ名表示用)
+$dbGroupData = getMyGroup($_SESSION['user_id']);
 //今何月かを示す関数
-//$m_id = date(m);
+$m_id = date('n');
 
 //各割り勘をリンク表示目的で判別する為のGETデータを格納
 $s_id = (!empty($_GET['s_id'])) ? $_GET['s_id'] : '';
@@ -29,19 +31,19 @@ $dbFormData = getUser($_SESSION['user_id']);
 $group_name = $dbFormData['group_name'];
 //ユーザーの所属するグループメンバー全員の情報を取得（ユーザーが先頭）
 $dbMemberData = getMemberdata($_SESSION['user_id'],$group_name);
+//debug('グループメンバーデータの情報：'.print_r($dbMemberData,true));
 
 //最新の割り勘表示機能
 //==============================
 //表示件数
-$listSpan = 10;
+$listSpan = 5;
 //自分用の割り勘データを取得
-$myBillData = "";
+$myBillData = getMyNewBills($_SESSION['user_id'],$group_name);
 
-//自分の最新割勘のgetパラメータ
-//自分の最新コメントのgetパラメータ
-//割勘当月最新情報のDB回収配列
-//自分の最新割勘のDB回収配列
+//最新の割り勘表示機能(追加搭載予定)
+//==============================
 //自分の最新コメントのDB回収配列
+//自分の最新コメントのgetパラメータ
 
 ?>
 
@@ -62,7 +64,7 @@ require('header.php');
         <div class="main_1colum_wide2">
         <form class="form" action="" method="post">
             <div class="form_title_wrap">
-                <div class="form_title_subject line_blue"><h2>今月（5月）の terrace厚木 の割り勘状況</h2></div>
+                <div class="form_title_subject line_blue"><h2>今月（<?php echo $m_id; ?>月）の <?php echo $dbGroupData[0]['data']; ?> の割り勘状況</h2></div>
             </div>
             <div class="form_main">
             <div class="form_main_wrap">
@@ -170,7 +172,7 @@ require('header.php');
         
         <form class="form" action="" method="post">
             <div class="form_title_wrap">
-                <div class="form_title_subject line_blue"><h2>最新のあなたの割り勘</h2></div>
+                <div class="form_title_subject line_blue"><h2>最新のあなたが入力/編集した割り勘</h2></div>
             </div>
             <div class="form_main">
             <div class="form_main_wrap">
@@ -181,55 +183,39 @@ require('header.php');
                 <th class="reco_date">日時</th>
                 <th class="reco_title">割り勘タイトル</th>
                 <th class="reco_total">総額</th>
-                <th class="reco_main">立替/支払者</th>
-                <th class="reco_sub">割り勘対象者</th>
+                <th class="reco_main">割り勘を</th>
+                <!-- <th class="reco_sub">あなた以外の関係者</th> -->
                 <th class="reco_detail">詳細</th>
                 </tr>
 
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
+                <?php
+                foreach($myBillData as $key => $val):
+                ?>            
 
                 <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
+                <td class="reco_item"><?php echo $val['g_year']; ?>/<?php echo $val['g_month']; ?>/<?php echo $val['g_date']; ?></td>
+                <td class="reco_item"><?php echo $val['title']; ?></td>
+                <td class="reco_item"><?php echo $val['totalCost']; ?>円</td>
+                <td class="reco_item">
+                <?php 
+                    if($val['isClaim'] == 1){
+                        echo 'された側';
+                    }else{ 
+                        echo 'した側';
+                    } ?></td>
+                <!--  <td class="reco_item"></td> -->
+                <td class="reco_item"><a href="payDetail.php?s_id=<?php echo $val['id']; ?>">詳細を見る</a></td>
                 </tr>
 
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
+                <?php
+                endforeach;
+                ?> 
 
                 </thead>
             </table>           
         </div>
 
- 
-
-            
+             
             </div>
             </div>
 
@@ -238,7 +224,8 @@ require('header.php');
             </div>
                                     
         </form>
-
+        
+        <!-- コメント機能実装まで凍結
         <form class="form" action="" method="post">
             <div class="form_title_wrap">
                 <div class="form_title_subject line_blue"><h2>最新のコメント</h2></div>
@@ -271,7 +258,7 @@ require('header.php');
                 <td class="reco_item">豚バラの細切れ肉</td>
                 <td class="reco_item">498円</td>
                 <td class="reco_item">つなお</td>
-                <td class="reco_item">働いてもいいと思うんです</td>
+                <td class="reco_item">タンパク質が欲しい</td>
                 <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
                 </tr>
 
@@ -289,7 +276,7 @@ require('header.php');
                 <td class="reco_item">豚バラの細切れ肉</td>
                 <td class="reco_item">498円</td>
                 <td class="reco_item">大木</td>
-                <td class="reco_item">肉を好きな人に悪い奴はいない</td>
+                <td class="reco_item">肉が好き</td>
                 <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
                 </tr>
 
@@ -309,6 +296,7 @@ require('header.php');
             </div>
                                     
         </form>
+        -->
 
 
         </div>
