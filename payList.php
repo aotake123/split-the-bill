@@ -11,7 +11,33 @@ debugLogStart();
 //ログイン認証
 require('auth.php');
 
-//画面表示用データ取得
+//==============================
+// 割り勘一覧画面処理
+//==============================
+//自分のデータのみを抜粋する為のIDデータを取得
+$u_id = $_SESSION['user_id'];
+//DBから所属グループデータを取得(グループ名表示用)
+$dbGroupData = getMyGroup($_SESSION['user_id']);
+//今何月かを示す関数
+$m_id = date('n');
+
+//ユーザーの個人データを取得
+$dbFormData = getUser($_SESSION['user_id']);
+    debug('ユーザーの個人データを取得：'.print_r($dbFormData,true));
+//ユーザーの所属するグループの番号データを取得
+$group_name = $dbFormData['group_name'];
+//ユーザーの所属するグループメンバー全員の情報を取得（ユーザーが先頭）
+$dbMemberData = getMemberdata($_SESSION['user_id'],$group_name);
+    //debug('グループメンバーデータの情報：'.print_r($dbMemberData,true));
+
+//最新の割り勘表示機能
+//==============================
+//表示件数
+$listSpan = 5;
+//グループ内の全ての割り勘データを取得
+$allBillData = getAllBills($group_name);
+    //debug('グループ内の全ての割り勘データを取得：'.print_r($allBillData,true));
+
 
 //自分の最新割勘のgetパラメータ
 //自分の最新コメントのgetパラメータ
@@ -38,7 +64,7 @@ require('header.php');
 
         <form class="form" action="" method="post">
             <div class="form_title_wrap">
-                <div class="form_title_subject line_blue"><h2>TERRACE厚木の〜月の割り勘一覧</h2></div>
+                <div class="form_title_subject line_blue"><h2>TERRACE厚木の<?php echo $m_id; ?>月の割り勘一覧</h2></div>
             </div>
             <div class="form_main">
             <div class="form_main_wrap">
@@ -47,37 +73,41 @@ require('header.php');
             <table class="record">
                 <thead><tr>
                 <th class="reco_personal">メンバー名</th>
-                <th class="reco_money_month">総額</th>
-                <th class="reco_count">件数</th>
-                <th class="reco_list">詳細</th>
+                <th class="reco_money_month">収支総額</th>
+                <th class="reco_count">申請した件数</th>
+                <!-- <th class="reco_list">詳細</th> -->
                 </tr>
 
-                <tr>
-                <td class="reco_item">つなお</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">14件</td>
-                <td class="reco_item"><a href="payDetail.php">一覧を見る</a></td>
-                </tr>
+                <?php
+               foreach($dbMemberData as $key => $val):
+               ?>
+
+                <?php
+                //会計の売掛け金を集計して取得
+                $paySum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 0);
+                $paySum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 0);
+                //会計の買い掛け金を集計して取得
+                $catchSum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 1);
+                $catchSum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 1);
+                //数字単体のデータ
+                $paySum_range = $paySum1[0]['SUM(totalCost)']+$paySum2[0]['SUM(splitBill)'];
+                $catchSum_range = $catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)'];
+                $totalSum_range = -$paySum1[0]['SUM(totalCost)']-$paySum2[0]['SUM(splitBill)']+$catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)'];
+                ?>
 
                 <tr>
-                <td class="reco_item">つなお</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">14件</td>
-                <td class="reco_item"><a href="payDetail.php">一覧を見る</a></td>
-                </tr>
-                <tr>
-                <td class="reco_item">つなお</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">14件</td>
-                <td class="reco_item"><a href="payDetail.php">一覧を見る</a></td>
-                </tr>
-                <tr>
-                <td class="reco_item">つなお</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">14件</td>
-                <td class="reco_item"><a href="payDetail.php">一覧を見る</a></td>
+                <td class="reco_item"><!-- メンバー名 --><?php echo $val['nickname']; ?></td>
+                <td class="reco_item"><?php echo $totalSum_range; ?>円</td>
+                <td class="reco_item">
+                <?php $MyBillCount = getMyBillCount($val['id'],$group_name); ?>
+                <?php echo $MyBillCount; ?>件
+                </td>
+                <!-- <td class="reco_item"><a href="payList.php?u_id=<?php echo $val['id']; ?>">一覧を見る</a></td> -->
                 </tr>
 
+                <?php
+                endforeach;
+                ?>
 
                 </thead>
             </table>           
@@ -90,118 +120,43 @@ require('header.php');
                 <th class="reco_date">日時</th>
                 <th class="reco_title">割り勘タイトル</th>
                 <th class="reco_total">総額</th>
-                <th class="reco_main">立替/支払者</th>
-                <th class="reco_sub">割り勘対象者</th>
+                <th class="reco_request">割り勘の申請者</th>
+                <!-- <th class="reco_billcount">割り勘の<br />関係者数</th> -->
                 <th class="reco_detail">詳細</th>
                 </tr>
 
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
+                <?php
+               foreach($allBillData as $key => $val):
+               ?>
 
                 <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
+                <td class="reco_item"><?php echo $val['g_year']; ?>/<?php echo $val['g_month']; ?>/<?php echo $val['g_date']; ?></td>
+                <td class="reco_item"><?php echo $val['title']; ?></td>
+                <td class="reco_item"><?php echo $val['totalCost']; ?>円</td>
+                <td class="reco_item">
+                <?php $request = getUser($val['users'],$group_name);
+                //debug('ユーザーの個人データを取得：'.print_r($request,true)); ?>
+                <?php echo $request['nickname']; ?>
+                (<?php 
+                    if($val['isClaim'] == 1){
+                        echo 'された側';
+                    }else{ 
+                        echo 'した側';
+                    } ?>)
+                </td>
+                <!-- <td class="reco_item">
+                <?php $splitBillCount = splitBillCount($val['id']);
+                    debug('割り勘の関係者人数データを取得：'.print_r($splitBillCount,true));
+                ?>
+                <?php echo $splitBillCountUp; ?>人
+                </td> -->
+                <td class="reco_item"><a href="payDetail.php?s_id=<?php echo $val['id']; ?>">詳細を見る</a></td>
                 </tr>
 
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
+                <?php
+                endforeach;
+                ?>
 
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
-
-                <tr>
-                <td class="reco_item">2019/4/27</td>
-                <td class="reco_item">豚バラの細切れ肉</td>
-                <td class="reco_item">498円</td>
-                <td class="reco_item">あなた</td>
-                <td class="reco_item">太朗、つなお、他●名</td>
-                <td class="reco_item"><a href="payDetail.php">詳細を見る</a></td>
-                </tr>
 
                 </thead>
             </table>           
