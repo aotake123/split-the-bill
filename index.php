@@ -60,7 +60,7 @@ if(!empty($_POST)){
                     $_SESSION['user_id'] = $dbh->LastInsertId();
 
                     debug('セッション変数の中身：'.print_r($_SESSION,true));
-                    header('Location:mypage.php'); //マイページへ
+                    header('Location:profEdit.php'); //マイページへ
                 }
 
             } catch(Exception $e){
