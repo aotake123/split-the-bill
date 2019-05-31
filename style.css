@@ -382,8 +382,18 @@ input[type="submit"]:hover{
 .img_prev{
 	width: 100px;
 	height: 100px;
-	border: 3px dot #bfbfbf;
-	background: #FF0000;
+    border: 3px dot #bfbfbf;
+    background-color: #f8dced;
+    background-image: url("image/noimage.jpeg"); 
+	border-radius: 4px;
+	float: left;
+	overflow: hidden;
+}
+.img_prev_detail{
+    width: 400px;
+    border: 3px dot #bfbfbf;
+    background-color: #f8dced;
+    background-image: url("image/noimage.jpeg"); 
 	border-radius: 4px;
 	float: left;
 	overflow: hidden;
@@ -541,20 +551,26 @@ th,td{
     width: 75px;
 }
 .reco_title{
-    width: 130px;
+    width: 180px;
 }
 .reco_total{
-    width: 45px;
+    width: 65px;
 }
 .reco_main{
     width: 85px;
 }
-.reco_sub{
-    width: 200px;
+.reco_request{
+    width: 130px;
+}
+/* .reco_sub{
+    width: 160px;
+}*/
+.reco_billcount{
+    width: 85px;
 }
 .reco_detail{
     width: 70px;
-}
+} 
 
 /* graph */
 .prof_whole_left_graph{
