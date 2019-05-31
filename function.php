@@ -253,13 +253,39 @@ function getGroup(){
     }
 }
 
+function getMyGroup($u_id){
+    debug('所属グループ名の情報を取得します。');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = "SELECT g.id,g.data FROM group_name AS g
+        INNER JOIN users AS u ON g.id = u.group_name 
+        WHERE u.id = :id";
+        $data = array(':id' => $u_id);
+        //クエリ実行
+        $stmt = queryPost($dbh,$sql,$data);
+        //クエリ結果返却(回収)
+        if($stmt){
+            return $stmt->fetchALL();
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+        $err_msg['common'] = MSG07;
+    }
+}
+
+
 function getItem(){
     debug('割り勘の項目リスト情報を取得します。');
     //例外処理
     try{
         //DB接続
         $dbh = dbConnect();
-        $sql = "SELECT * FROM item WHERE isDelete = 0";
+        $sql = "SELECT id,data,isDelete FROM item WHERE isDelete = 0";
         $data = array();
         //クエリ実行
         $stmt = queryPost($dbh,$sql,$data);
@@ -331,7 +357,7 @@ function getMemberdata($u_id,$group_name){
     try{
         //DB接続
         $dbh = dbConnect();
-        $sql = 'SELECT * FROM users 
+        $sql = 'SELECT id,nickname,group_name,pic,isDelete FROM users 
         WHERE group_name = :group_name AND isDelete = 0
         ORDER BY id = :id DESC';
         $data = array(':group_name' => $group_name, ':id' => $u_id);
@@ -411,20 +437,20 @@ function getSumUserCost($u_id, $group_name, $isClaim){
 }
 
 function getMyNewBills($u_id, $group_name){
-    debug('ユーザーの最新5件の割り勘情報を返します');
+    debug('ユーザーの最新X件の割り勘情報を返します');
     //例外処理
     try{
         //DB接続
         $dbh = dbConnect();
-        $sql = 'SELECT id,g_year,g_month,g_day,title,該当者if、総額、詳細get添付 FROM payment
-        WHERE users = :users
-        AND g_year = :g_year 
-        AND up.isClaim = :isClaim
-        AND isDelete = 0
+        $sql = 'SELECT p.id,p.title,p.g_year,p.g_month,p.g_date,p.item,p.totalCost,p.users,p.isClaim,p.comment FROM payment AS p
+        INNER JOIN users AS u ON p.users = u.id
+        WHERE u.id = :users
+        AND u.group_name = :group_name
+        AND p.isDelete = 0
+        ORDER BY g_year DESC,g_month DESC,g_date DESC
+        LIMIT 10 OFFSET 0
         ';
-        $data = array(':group_name' => $group_name, 
-        ':users' => $u_id, ':isClaim' => $isClaim
-        );
+        $data = array(':users' => $u_id, ':group_name' => $group_name);
         //クエリ実行
         $stmt = queryPost($dbh, $sql, $data);
         
@@ -438,6 +464,173 @@ function getMyNewBills($u_id, $group_name){
     } catch (Exception $e){
         error_log('エラー発生：' . $e->getMessage());
     }
+}
+
+function getSplitBillOne($u_id,$s_id){
+    debug('単一割り勘の中間テーブル情報を返します');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT up.users,up.splitbill,up.isClaim,up.isDelete FROM usersPayment AS up
+        LEFT JOIN users AS u ON u.id = up.users
+        RIGHT JOIN payment AS p ON p.id2 = up.payment
+        WHERE up.users = :users AND p.id = :s_id
+        ';
+        $data = array(':users' => $u_id, ':s_id' => $s_id);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->fetchAll(); //データ全て
+
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
+function getItemName($s_id){
+    debug('割り勘詳細画面で表示する、項目名の日本語を返します');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT p.id,p.title,p.item,i.data FROM payment AS p
+        INNER JOIN item AS i ON p.item = i.id
+        WHERE p.id = :s_id AND p.isDelete = 0
+        ';
+        $data = array(':s_id' => $s_id);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->fetchAll(); //データ全て
+
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+
+}
+
+function getBillView($u_id,$s_id){
+    debug('割り勘詳細画面で表示する、項目名の日本語を返します');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT up.id,up.users,up.payment,up.splitBill,up.isDelete,
+        p.id2,p.title,p.item FROM usersPayment AS up
+        INNER JOIN payment AS p ON up.payment = p.id2
+        WHERE up.users = :u_id AND p.id = :s_id AND up.isDelete = 0 
+        ';
+        $data = array(':u_id' => $u_id, ':s_id' => $s_id);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->fetchAll(); //データ全て
+
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
+function getAllBills($group_name){
+    debug('グループ内の全ての割り勘データを取得');
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT p.id,p.title,p.g_year,p.g_month,
+        p.g_date,p.item,p.totalCost,p.users,p.isClaim,p.comment 
+        FROM payment AS p
+        INNER JOIN users AS u ON p.users = u.id
+        WHERE u.group_name = :group_name
+        AND p.isDelete = 0
+        ORDER BY g_year DESC,g_month DESC,g_date DESC
+        LIMIT 10 OFFSET 0
+        ';
+        $data = array(':group_name' => $group_name);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->fetchAll(); //データ全て
+
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
+function getMyBillCount($u_id,$group_name){
+    debug('指定した個人＆グループ内における、割り勘申請件数を取得');
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT id,group_name,users,isDelete FROM payment
+        WHERE group_name = :group_name
+        AND users = :u_id
+        AND isDelete = 0
+        ';
+        $data = array(':u_id' => $u_id, ':group_name' => $group_name);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->rowCount(); //件数
+
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+  
+}
+
+function splitBillCount($s_id){
+    debug('指定した割り勘における、関係者の件数を取得');
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT up.splitBill FROM usersPayment AS up
+        INNER JOIN payment AS p ON up.payment = p.id2
+        WHERE p.id = :s_id
+        AND up.isDelete = 0
+        ';
+        $data = array(':s_id' => $s_id);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            return $stmt->rowCount(); //件数
+
+        }else{
+            return false;
+        }
+
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+   
+ 
 }
 
 //==============================
