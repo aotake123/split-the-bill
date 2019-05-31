@@ -16,12 +16,24 @@ require('auth.php');
 //==============================
 // 画面表示用データ取得
 //==============================
+
 //請求/支払いフラグ（0が請求,1が支払い）GETパラメータの有無で判別
 $isClaim = (!empty($_GET['isc_id'])) ? 1 : 0;
 //各割り勘詳細画面向けリンクを表示する為のGETデータを格納
 $s_id = (!empty($_GET['s_id'])) ? $_GET['s_id'] : '';
 //DBから割り勘固有データを取得
-$dbBillData = (!empty($s_id)) ? getSplitbill($_SESSION['user_id'], $s_id) : null;
+$dbBillFormData = (!empty($s_id)) ? getSplitbill($_SESSION['user_id'], $s_id) : null;
+//新規登録画面か編集画面かの判別用フラグ
+$edit_flg = (empty($dbBillFormData)) ? false :true;
+
+//パラメータ改ざんチェック
+//==============================
+//GETパラメータはあるが、改ざんされている（URLをいじくった）場合、正しい対局データが取れないのでマイページへ遷移させる
+if(!empty($s_id) && empty($dbBillFormData)){
+	debug('GETパラメータの対局IDが違います。');
+	header("Location:mypage.php"); //マイページへ
+}
+
 //割り勘の項目データを取得
 $dbItemData = getItem();
 //ユーザーの個人データを取得
@@ -32,22 +44,14 @@ $group_name = $dbFormData['group_name'];
 $dbMemberCount = getMemberCount($_SESSION['user_id'],$group_name);
 //ユーザーの所属するグループメンバー全員の情報を取得（ユーザーが先頭）
 $dbMemberData = getMemberdata($_SESSION['user_id'],$group_name);
-//新規登録画面か編集画面かの判別用フラグ
-$edit_flg = (empty($dbBillData)) ? false :true;
 
 //debug('割り勘ID：'.$s_id); //DB登録後に付けられるデータ
-//debug('割り勘固有のDBデータ：'.print_r($dbBillData,true)); //登録ができるようになったら解放
-//debug('割り勘項目データ：'.print_r($dbItemData,true)); //OK
+debug('割り勘固有のDBデータ：'.print_r($dbBillData,true));
+debug('割り勘項目データ：'.print_r($dbItemData,true)); //OK
 //debug('ユーザーの所属するグループの人数：'.print_r($dbMemberCount,true)); //OK
 //debug('ユーザーの所属するグループの情報：'.print_r($dbMemberData,true)); //OK
 
-//パラメータ改ざんチェック
-//==============================
-//GETパラメータはあるが、改ざんされている（URLをいじくった）場合、正しい対局データが取れないのでマイページへ遷移させる
-if(!empty($s_id) && empty($dbFormData)){
-	debug('GETパラメータの対局IDが違います。');
-	header("Location:mypage.php"); //マイページへ
-}
+
 
 //POST通信の有無を確認
 if(!empty($_POST)){
@@ -63,7 +67,9 @@ if(!empty($_POST)){
 	$users = $_SESSION['user_id'];
 	$g_year = $_POST['g_year'];
 	$g_month = $_POST['g_month'];
+    $g_month = sprintf('%02d',$g_month);
 	$g_date = $_POST['g_date'];
+	$g_month = sprintf('%02d',$g_month);
 
 	//中間テーブル照合用のIDを作成
 	$id2 = makerandkey();	//割り勘テーブル側に代入
@@ -90,7 +96,6 @@ if(!empty($_POST)){
 	//画像をPOSTしてない（登録していない）が、DBには既に登録されている場合、DBのパスを入れて画像を表示する
 	$receipt = ( empty($receipt) && !empty($dbFormData['receipt']) ) ? $dbFormData['receipt'] : $receipt;
 	//debug('receipt情報：'.print_r($receipt,true));
-	
 
 	//未入力チェック
 	validRequired($title,'title');
@@ -262,18 +267,18 @@ require('header.php');
 						<div>
 							<select name="g_month">
 									<option value="0" <?php if(empty(getBillFormData('g_month'))) echo 'selected="selected"'; ?>>▶︎選択してください</option> 
-									<option value="1" <?php if(getBillFormData('g_month') == 1) echo 'selected="selected"'; ?>>1</option>
-									<option value="2" <?php if(getBillFormData('g_month') == 2) echo 'selected="selected"'; ?>>2</option>
-									<option value="3" <?php if(getBillFormData('g_month') == 3) echo 'selected="selected"'; ?>>3</option>
-									<option value="4" <?php if(getBillFormData('g_month') == 4) echo 'selected="selected"'; ?>>4</option>
-									<option value="5" <?php if(getBillFormData('g_month') == 5) echo 'selected="selected"'; ?>>5</option>
-									<option value="6" <?php if(getBillFormData('g_month') == 6) echo 'selected="selected"'; ?>>6</option>
-									<option value="7" <?php if(getBillFormData('g_month') == 7) echo 'selected="selected"'; ?>>7</option>
-									<option value="8" <?php if(getBillFormData('g_month') == 8) echo 'selected="selected"'; ?>>8</option>
-									<option value="9" <?php if(getBillFormData('g_month') == 9) echo 'selected="selected"'; ?>>9</option>
-									<option value="10" <?php if(getBillFormData('g_month') == 10) echo 'selected="selected"'; ?>>10</option>
-									<option value="11" <?php if(getBillFormData('g_month') == 11) echo 'selected="selected"'; ?>>11</option>
-									<option value="12" <?php if(getBillFormData('g_month') == 12) echo 'selected="selected"'; ?>>12</option>
+									<option value="1" <?php if(getBillFormData('g_month') == 1) { echo 'selected="selected"'; }else if(date('n') == 1){ echo 'selected="selected"'; } ?>>1</option>
+									<option value="2" <?php if(getBillFormData('g_month') == 2) { echo 'selected="selected"'; }else if(date('n') == 2){ echo 'selected="selected"'; } ?>>2</option>
+									<option value="3" <?php if(getBillFormData('g_month') == 3) { echo 'selected="selected"'; }else if(date('n') == 3){ echo 'selected="selected"'; } ?>>3</option>
+									<option value="4" <?php if(getBillFormData('g_month') == 4) { echo 'selected="selected"'; }else if(date('n') == 4){ echo 'selected="selected"'; } ?>>4</option>
+									<option value="5" <?php if(getBillFormData('g_month') == 5) { echo 'selected="selected"'; }else if(date('n') == 5){ echo 'selected="selected"'; } ?>>5</option>
+									<option value="6" <?php if(getBillFormData('g_month') == 6) { echo 'selected="selected"'; }else if(date('n') == 6){ echo 'selected="selected"'; } ?>>6</option>
+									<option value="7" <?php if(getBillFormData('g_month') == 7) { echo 'selected="selected"'; }else if(date('n') == 7){ echo 'selected="selected"'; } ?>>7</option>
+									<option value="8" <?php if(getBillFormData('g_month') == 8) { echo 'selected="selected"'; }else if(date('n') == 8){ echo 'selected="selected"'; } ?>>8</option>
+									<option value="9" <?php if(getBillFormData('g_month') == 9) { echo 'selected="selected"'; }else if(date('n') == 9){ echo 'selected="selected"'; } ?>>9</option>
+									<option value="10" <?php if(getBillFormData('g_month') == 10) { echo 'selected="selected"'; }else if(date('n') == 10){ echo 'selected="selected"'; } ?>>10</option>
+									<option value="11" <?php if(getBillFormData('g_month') == 11) { echo 'selected="selected"'; }else if(date('n') == 11){ echo 'selected="selected"'; } ?>>11</option>
+									<option value="12" <?php if(getBillFormData('g_month') == 12) { echo 'selected="selected"'; }else if(date('n') == 12){ echo 'selected="selected"'; } ?>>12</option>
                             </select>
 						</div>
 						<div>月</div>
@@ -283,7 +288,7 @@ require('header.php');
                                 <?php
                                 for($i = 1; $i < 32; $i++){
                                 ?>
-                                    <option value="<?php echo $i; ?>" <?php if(getBillFormData('g_date') == $i) echo 'selected="selected"'; ?>><?php echo $i; ?></option>;
+                                    <option value="<?php echo $i; ?>" <?php if(getBillFormData('g_date') == $i ) { echo 'selected="selected"'; }else if(date('j') == $i){ echo 'selected="selected"'; } ?>><?php echo $i; ?></option>;
                                 <?php
                                 }
                                 ?>
@@ -395,7 +400,7 @@ require('header.php');
 							<input type="hidden" name="userIsClaim<?php echo $key; ?>"
 							 value="<?php
 							 if($key === 0){
-								if(empty($_GET['isc_id'])) { echo 0; }else{ echo 1; }; 
+								if(empty($_GET['isc_id'])) { echo 1; }else{ echo 0; }; 
 							}else{
 								if(empty($_GET['isc_id'])) { echo 1; }else{ echo 0; }; 
 							}
@@ -430,7 +435,7 @@ require('header.php');
             	<div class="prof_whole_right">
             		<div class="img_wrap">
             			<div class="img_upload_left">
-            				<img src="<?php echo getBillFormData('receipt'); ?>" alt="profile" class="img_prev">
+            				<img src="<?php if(!empty(getBillFormData('receipt'))){ echo getBillFormData('receipt');}else{ echo "images/noimage.jpeg"; } ?>" alt="profile" class="img_prev">
 						</div>
             			<div class="img_upload_right">
 							<div class="img_upload_btn">
