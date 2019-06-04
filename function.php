@@ -2,6 +2,9 @@
 //==============================
 //ログ
 //==============================
+//サーバー上でのエラー排出
+ini_set('display_errors',1);
+error_reporting(E_ALL);
 //ログを取るか否かの設定
 ini_set('log_error','on');
 //ログの出力ファイルを指定
@@ -146,15 +149,16 @@ function validEmailDup($str){
     try{
    //DB接続準備
     $dbh = dbConnect();
-    //SQL文（クエリー作成）
-    $stmt = $dbh->prepare('SELECT count(*) FROM users WHERE email = :email AND isDelete = 0');
-    //プレースホルダに値をセットし、SQL文を実行
-    $stmt->execute(array(':email' => $str));
+    $sql = 'SELECT count(*) FROM users WHERE email = :email AND isDelete = 0';
+    $data = array(':email' => $str);
+    //クエリ実行
+    $stmt = queryPost($dbh,$sql,$data);
     //クエリ結果の値を取得
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     //array_shift関数:配列の先頭を取り出す関数。
     //クエリ結果は配列形式で入っているので、array_shiftで先頭を取り出して判定
-    if(!empty(array_shift($result))){
+    $empty_result = array_shift($result);
+    if(!empty($empty_result)){
         $err_msg['email'] = MSG08;
     }   
 
@@ -174,9 +178,9 @@ function validEmailDup($str){
 //DB接続関数
 function dbConnect(){
     //DB接続準備
-    $dsn = 'mysql:dbname=ikizama_splitbill;host=localhost;charset=utf8';
-    $user = 'root';
-    $password = 'root';
+    $dsn = 'mysql:dbname=ikizama_splitbill;host=mysql705b.xserver.jp;charset=utf8';
+    $user = 'ikizama_warikan';
+    $password = 'steel824';
     $options = array(
         //SQL実行時に例外をスロー
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -767,7 +771,8 @@ function uploadImg($file,$key){
             // $file['mime']の値はブラウザ側で偽装可能なので、MIMEタイプを自前でチェックする
             // exif_imagetype関数は「IMAGETYPE_GIF」「IMAGETYPE_JPEG」などの定数を返す
             $type = @exif_imagetype($file['tmp_name']);
-            if (!in_array($type, [IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) { // 第三引数にはtrueを設定すると厳密にチェックしてくれるので必ずつける
+            $array_value = in_array($type, [IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG], true); // 第三引数にはtrueを設定すると厳密にチェックしてくれるので必ずつける
+            if (!$array_value){
                 throw new RuntimeException('画像形式が未対応です');
             }
             // ファイルデータからSHA-1ハッシュを取ってファイル名を決定し、ファイルを保存する
