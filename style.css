@@ -278,6 +278,8 @@ input[type="submit"],.form_cancel{
     background: #f29514;
     border: 1px solid #e38208;
     border-radius: 4px;
+    transition: all 1s;
+    box-shadow: 3px 3px 3px #b8b8b8;
 }
 textarea{
 	font-size: 14px;
@@ -304,6 +306,9 @@ input[type="checkbox"]{
 input[type="submit"]:hover{
     background: #feca38;
     border: 1px solid #feca38;
+    transition: all 1s;
+    box-shadow: 3px 5px 10px #c8c8c8;
+    transform: translateY(-3px);
 }
 
 .form a{
