@@ -71,7 +71,7 @@ validRequired($auth_key,'auth');
 本メールアドレス宛にパスワード再発行を致しました。
 下記のURLにて再発行パスワードをご入力頂き、ログインください。
 
-ログインページ：http://localhost:8888/splitbill/login.php
+ログインページ：http://ikizama-design.com/splitbill/login.php
 再発行パスワード：{$pass}
 ※ログイン後、パスワードの変更をお願いします
 
@@ -84,7 +84,6 @@ EOT;
                         //session消して画面を遷移
                         session_unset();    //IDが無くなると下記のメッセージが表示されなくなるので消さない
                         $_SESSION['msg_success'] = SUC03;
-                        debug('セッション変数の中身：'.print_r($_SESSION,ture));
 
                         header("Location:login.php");
                         }else{

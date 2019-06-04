@@ -54,16 +54,16 @@ if(!empty($_POST)){
                     $subject = 'パスワード再発行認証 | 割り勘シェアハウス';
                     //EOTはEndOfFileの略。ABCでもなんでもいい。先頭の<<<の後の文字列と合わせること。最後のEOTの前後に空白など何も入れてはいけない
                     //EOT内の半角空白もすべてそのまま半角空白として扱われるのでインデントはしないこと
-                    $commnet = <<<EOT
+                    $comment = <<<EOT
 本メールアドレス宛にパスワード再発行のご依頼がありました。
 下記のURLにて認証キーをご入力頂くとパスワードが再発行されます。
 
-パスワード再発行認証キー入力ページ：http://localhost:8888/splitbill/passRemindRecieve.php
+パスワード再発行認証キー入力ページ：http://ikizama-design.com/splitbill/passRemindRecieve.php
 認証キー：{$auth_key}
 ※認証キーの有効期限は30分となります
 
 認証キーを再発行されたい場合は下記ページより再度再発行をお願い致します。
-http://localhost:8888/splitbill/passRemindSend.php
+http://ikizama-design.com/splitbill/passRemindSend.php
 
 ///////////////////////////////////////////
 割り勘シェアハウス 管理事務局
