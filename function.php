@@ -3,7 +3,7 @@
 //ログ
 //==============================
 //サーバー上でのエラー排出
-ini_set('display_errors',1);
+ini_set('display_errors',0);
 error_reporting(E_ALL);
 //ログを取るか否かの設定
 ini_set('log_error','on');
@@ -60,7 +60,7 @@ define('MSG03','6文字以上で入力してください');
 define('MSG04','Emailの形式で入力してください');
 define('MSG05','パスワード（再入力の値）が違います');
 define('MSG06','半角英数字で入力してください');
-define('MSG07','エラーが発生しました');
+define('MSG07','データ通信中にエラーが発生しました');
 define('MSG08','既に登録されているメールアドレスです');
 
 define('MSG09','パスワードがアンマッチです');
@@ -69,6 +69,12 @@ define('MSG11','変更前のパスワードと同じです');
 define('MSG12','認証キーが違います');
 define('MSG13','認証キーの有効時間を過ぎています');
 define('MSG14','文字で入力してください');
+define('MSG15','割り勘の総額が、各メンバーの金額を足した合計値と一致していません。');
+define('MSG16','割り勘項目を選択してください。');
+define('MSG17','プロフィールは6文字以内で入力してください');
+define('MSG18','タイトルは10文字以内で入力してください');
+define('MSG19','半角数字で入力してください');
+
 
 define('SUC01','パスワードを変更しました');
 define('SUC02','プロフィールを変更しました');
@@ -95,7 +101,21 @@ function validMaxLen($str,$key,$max = 256){
         global $err_msg;
         $err_msg[$key] = MSG02;         
      } 
-}     
+}
+//最大文字数超過確認(プロフニックネーム用)
+function validMaxLen2($str,$key,$max = 6){
+    if(mb_strlen($str) > $max){
+       global $err_msg;
+       $err_msg[$key] = MSG17;         
+    } 
+}
+//最大文字数超過確認(割り勘タイトル用)
+function validMaxLen3($str,$key,$max = 10){
+    if(mb_strlen($str) > $max){
+       global $err_msg;
+       $err_msg[$key] = MSG18;         
+    } 
+}        
 //最小文字数未到達確認
 function validMinLen($str,$key,$min = 6){
      if($min > mb_strlen($str)){
@@ -122,6 +142,13 @@ function validHalf($str,$key){
     if(!preg_match("/^[a-zA-Z0-9]+$/", $str)){
         global $err_msg;
         $err_msg[$key] = MSG06;
+    }
+}
+//半角数字か否かの確認
+function validMath($str,$key){
+    if(!preg_match("/^[0-9]+$/", $str)){
+        global $err_msg;
+        $err_msg[$key] = MSG19;
     }
 }
 //固定長チェック（認証キー用）
@@ -167,8 +194,21 @@ function validEmailDup($str){
         $err_msg['common'] = MSG07;
     }
 }
-
+//割り勘計算の合計値が合っているかの確認
+function validCost($str1,$str2,$key){
+    if($str1 !== $str2){
+        global $err_msg;
+        $err_msg[$key] = MSG15;
+    }
+}
 //selectboxのチェック（概要を確認した上で反映する）
+function validSelect($str,$key){
+    if(empty($str)){
+        global $err_msg;
+        $err_msg[$key] = MSG16;
+    }
+}
+
 
 
 //==============================
@@ -178,9 +218,9 @@ function validEmailDup($str){
 //DB接続関数
 function dbConnect(){
     //DB接続準備
-    $dsn = 'mysql:dbname=ikizama_splitbill;host=mysql705b.xserver.jp;charset=utf8';
-    $user = 'ikizama_warikan';
-    $password = 'steel824';
+    $dsn = 'mysql:dbname=ikizama_splitbill;host=localhost;charset=utf8';
+    $user = 'root';
+    $password = 'root';
     $options = array(
         //SQL実行時に例外をスロー
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -330,6 +370,29 @@ function getSplitbill($u_id,$s_id){
     }
 }
 
+function getSplitbillDetail($s_id){
+    debug('割り勘固有情報を取得します');
+    debug('割り勘ID：'.$s_id);
+    //例外処理
+    try{
+        //DB接続
+        $dbh = dbConnect();
+        $sql = 'SELECT * FROM payment WHERE id = :s_id AND isDelete = 0';
+        $data = array('s_id' => $s_id);
+        //クエリ実行
+        $stmt = queryPost($dbh, $sql, $data);
+        
+        if($stmt){
+            //クエリ結果のデータを1レコード返却
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }else{
+            return false;
+        }
+    } catch (Exception $e){
+        error_log('エラー発生：' . $e->getMessage());
+    }
+}
+
 function getMemberCount($u_id,$group_name){
     debug('ログイン者の所属団体メンバーの人数を返します');
     //debug('ユーザーID：'.$u_id);
@@ -440,19 +503,20 @@ function getSumUserCost($u_id, $group_name, $isClaim){
     }
 }
 
-function getMyNewBills($u_id, $group_name){
+function getMyNewBills($u_id, $group_name,$span){
     debug('ユーザーの最新X件の割り勘情報を返します');
     //例外処理
     try{
         //DB接続
         $dbh = dbConnect();
-        $sql = 'SELECT p.id,p.title,p.g_year,p.g_month,p.g_date,p.item,p.totalCost,p.users,p.isClaim,p.comment FROM payment AS p
+        $sql = 'SELECT p.id,p.title,p.g_year,p.g_month,p.g_date,p.item,p.totalCost,p.users,p.isClaim,p.comment,p.createDate 
+        FROM payment AS p
         INNER JOIN users AS u ON p.users = u.id
         WHERE u.id = :users
         AND u.group_name = :group_name
         AND p.isDelete = 0
-        ORDER BY g_year DESC,g_month DESC,g_date DESC
-        LIMIT 10 OFFSET 0
+        ORDER BY g_year DESC,g_month DESC,g_date DESC,createDate DESC
+        LIMIT '.$span.' OFFSET 0
         ';
         $data = array(':users' => $u_id, ':group_name' => $group_name);
         //クエリ実行
@@ -551,27 +615,47 @@ function getBillView($u_id,$s_id){
     }
 }
 
-function getAllBills($group_name){
+function getAllBills($currentPageNum,$group_name,$m_id,$span){
     debug('グループ内の全ての割り勘データを取得');
     //例外処理
     try{
         //DB接続
         $dbh = dbConnect();
+        //件数取得のためのSQL作成
+        $sql = 'SELECT id FROM payment
+                WHERE isDelete = 0
+                AND group_name = :group_name
+                AND g_month = :g_month';
+        $data = array(':group_name' => $group_name, ':g_month' => $m_id);
+        $stmt = queryPost($dbh, $sql, $data);
+        $rst['total'] = $stmt->rowCount(); //総レコード数
+        $rst['total_page'] = ceil($rst['total']/$span); //総ページ数 ceilは切り上げ関数（端数も含めてページを出してる）
+        if(!$stmt){
+            return false;
+            }
+
+        //データ取得するためのSQL作成
         $sql = 'SELECT p.id,p.title,p.g_year,p.g_month,
         p.g_date,p.item,p.totalCost,p.users,p.isClaim,p.comment 
         FROM payment AS p
         INNER JOIN users AS u ON p.users = u.id
         WHERE u.group_name = :group_name
+        AND p.g_month = :g_month
         AND p.isDelete = 0
         ORDER BY g_year DESC,g_month DESC,g_date DESC
-        LIMIT 10 OFFSET 0
         ';
-        $data = array(':group_name' => $group_name);
+        //ページング表示
+        $sql .= ' LIMIT ' .$span. ' OFFSET ' .$currentPageNum;
+
+        $data = array(':group_name' => $group_name, ':g_month' => $m_id);
+        debug('SQL文の表示：'.$sql);
         //クエリ実行
         $stmt = queryPost($dbh, $sql, $data);
         
         if($stmt){
-            return $stmt->fetchAll(); //データ全て
+            //クエリ結果のデータを全レコードを格納
+            $rst['data'] = $stmt->fetchAll();
+            return $rst;
 
         }else{
             return false;
@@ -799,3 +883,54 @@ function uploadImg($file,$key){
     }
   }
 }
+
+//ページング
+// $currentPageNum : 現在のページ数
+// $totalPageNum : 総ページ数
+// $link : 検索用GETパラメータリンク
+// $pageColNum : ページネーション表示数
+function pagination( $currentPageNum, $totalPageNum, $link = '', $pageColNum = 5){
+    // 現在のページが、総ページ数と同じ　かつ　総ページ数が表示項目数以上なら、左にリンク3個出す
+    if( $currentPageNum == $totalPageNum && $totalPageNum >= $pageColNum){
+      $minPageNum = $currentPageNum - 4;
+      $maxPageNum = $currentPageNum;
+    // 現在のページが、総ページ数の１ページ前なら、左にリンク３個、右に１個出す
+    }elseif( $currentPageNum == ($totalPageNum-1) && $totalPageNum >= $pageColNum){
+      $minPageNum = $currentPageNum - 3;
+      $maxPageNum = $currentPageNum + 1;
+    // 現ページが2の場合は左にリンク１個、右にリンク３個だす。
+    }elseif( $currentPageNum == 2 && $totalPageNum >= $pageColNum){
+      $minPageNum = $currentPageNum - 1;
+      $maxPageNum = $currentPageNum + 3;
+    // 現ページが1の場合は左に何も出さない。右に５個出す。
+    }elseif( $currentPageNum == 1 && $totalPageNum >= $pageColNum){
+      $minPageNum = $currentPageNum;
+      $maxPageNum = 5;
+    // 総ページ数が表示項目数より少ない場合は、総ページ数をループのMax、ループのMinを１に設定
+    }elseif($totalPageNum < $pageColNum){
+      $minPageNum = 1;
+      $maxPageNum = $totalPageNum;
+    // それ以外は左に２個出す。
+    }else{
+      $minPageNum = $currentPageNum - 2;
+      $maxPageNum = $currentPageNum + 2;
+    }
+    
+    echo '<div class="pagination">';
+      echo '<ul class="pagination-list">';
+        if($currentPageNum != 1){
+          echo '<li class="list-item"><a href="?p=1&p_id='.$link.'">&lt;</a></li>';
+        }
+        for($i = $minPageNum; $i <= $maxPageNum; $i++){
+          echo '<li class="list-item ';
+          if($currentPageNum == $i ){ echo 'active'; }
+          echo '"><a href="?p='.$i.'&p_id='.$link.'">'.$i.'</a></li>';
+        }
+        if($currentPageNum != $maxPageNum){
+          echo '<li class="list-item"><a href="?p='.$maxPageNum.'&p_id='.$link.'">&gt;</a></li>';
+        }
+      echo '</ul>';
+    echo '</div>';
+  }
+
+?>
