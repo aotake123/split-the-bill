@@ -4,7 +4,7 @@
 require('function.php');
 
 debug('「「「「「「「「「「「「「「「「「「「「「「「「「「');
-debug('割り勘申請ページ（する側の人用）');
+debug('割り勘申請ページ');
 debug('「「「「「「「「「「「「「「「「「「「「「「「「「「');
 debugLogStart();
 
@@ -12,7 +12,7 @@ debugLogStart();
 require('auth.php');
 
 //==============================
-// 割り勘申請（する側）画面処理
+// 割り勘申請画面処理
 //==============================
 // 画面表示用データ取得
 //==============================
@@ -28,7 +28,8 @@ $edit_flg = (empty($dbBillFormData)) ? false :true;
 
 //パラメータ改ざんチェック
 //==============================
-//GETパラメータはあるが、改ざんされている（URLをいじくった）場合、正しい対局データが取れないのでマイページへ遷移させる
+//GETパラメータはあるが、改ざんされている（URLを手入力でいじくった）場合、
+//正しい割り勘データが取れないのでマイページへ遷移させる
 if(!empty($s_id) && empty($dbBillFormData)){
 	debug('GETパラメータの対局IDが違います。');
 	header("Location:mypage.php"); //マイページへ
@@ -46,7 +47,6 @@ $dbMemberCount = getMemberCount($_SESSION['user_id'],$group_name);
 $dbMemberData = getMemberdata($_SESSION['user_id'],$group_name);
 
 //debug('割り勘ID：'.$s_id); //DB登録後に付けられるデータ
-debug('割り勘固有のDBデータ：'.print_r($dbBillData,true));
 debug('割り勘項目データ：'.print_r($dbItemData,true)); //OK
 //debug('ユーザーの所属するグループの人数：'.print_r($dbMemberCount,true)); //OK
 //debug('ユーザーの所属するグループの情報：'.print_r($dbMemberData,true)); //OK
@@ -62,7 +62,9 @@ if(!empty($_POST)){
 	//POSTされた値を変数に代入
 	$title = $_POST['title'];
 	$item = $_POST['item'];
-	$totalCost = $_POST['totalCost'];
+	$totalCost = (int)$_POST['totalCost'];
+	debug('$totalCostの中身：'.print_r($totalCost,true));
+
 	$comment = $_POST['comment'];
 	$users = $_SESSION['user_id'];
 	$g_year = $_POST['g_year'];
@@ -74,13 +76,15 @@ if(!empty($_POST)){
 	//中間テーブル照合用のIDを作成
 	$id2 = makerandkey();	//割り勘テーブル側に代入
 	$payment = $id2;	//中間テーブル側に代入
+	//割り勘のバリデーション計算用の変数を作成
+	$countCost = 0;
 
 	//グループの人数分変数を定義→値を代入
 	for($i=0; $i<$dbMemberCount; ++$i){
 		$userCost[$i] = $_POST["userCost$i"];
 		$userIsClaim[$i] = $_POST["userIsClaim$i"];
-		debug('$_POST["userCost$i"]の中身：'.print_r($_POST["userCost$i"],true));
-		debug('$_POST["userIsClaim$i"]の中身：'.print_r($_POST["userIsClaim$i"],true));
+		//debug('$_POST["userCost$i"]の中身：'.print_r($_POST["userCost$i"],true));
+		//debug('$_POST["userIsClaim$i"]の中身：'.print_r($_POST["userIsClaim$i"],true));
 		//$userIsClaim[$i]がNULLでエラー判定になるのを回避する処理
 		if($userIsClaim[$i] === NULL){
 			$userIsClaim[$i] = 0;
@@ -88,7 +92,11 @@ if(!empty($_POST)){
 		if($userCost[$i] === NULL){
 			$userCost[$i] = 0;
 		}
+		global $countCost;
+		$countCost += $userCost[$i];
+
 	}
+
 
 	//画像アップロード
 	$receipt = ( !empty($_FILES['receipt']['name']) ) ? uploadImg($_FILES['receipt'],'receipt') : '';
@@ -107,18 +115,29 @@ if(!empty($_POST)){
 		//バリデーション開始
 		//割り勘タイトル
 			//文字数制限
-		validMaxLen($title,'title');
+			validMaxLen3($title,'title');
 		//割り勘項目名
 			//未選択
+			validSelect($item,'item');
 		//割り勘総額
-			//30000円以上の精算は割り勘できません。
-			//金額上限、ゼロ禁止
 			//合計金額が違う
-		//各々の割り勘金額画面
-			//清算式(ボタンを押さないと出てこないようにする)
-			//金額上限、ゼロ禁止
+			validCost($totalCost,$countCost,'totalCost');
+			//半角数字チェック
+			validMath($totalCost,'totalCost');
+			//最大文字数超過
+			validMaxLen($totalCost,'totalCost');
 		//コメント文
-		validMaxLen($comment, 'comment');
+			//最大文字数超過
+			validMaxLen($comment,'comment');
+		//割り勘個別入力欄
+		for($i=0; $i<$dbMemberCount; ++$i){
+			$userCost[$i] = $_POST["userCost$i"];
+			//半角数字か(入力値がある場合のみ)
+			if(!empty($userCost[$i])){
+				validMath($userCost[$i],"userCost$i");
+			}
+		}
+
 
 		if(empty($err_msg)){
 			debug('バリデーションOKです。');
@@ -225,8 +244,11 @@ require('header.php');
            <div class="form_main">
            <div class="form_main_wrap">
 
-            <div class="area-msg">
-                <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
+            <div class="err_msg">
+                <?php if(!empty($_POST['common'])) echo '・' .$err_msg['common'] .'<br/>'; ?>
+				<?php if(!empty($err_msg['title'])) echo '・' .$err_msg['title'] .'<br/>'; ?>
+				<?php if(!empty($err_msg['item'])) echo '・' .$err_msg['item'] .'<br/>'; ?>
+				<?php if(!empty($err_msg['totalCost'])) echo '・' .$err_msg['totalCost'] .'<br/>'; ?>
             </div>
             
             <div class="prof_whole prof_whole_line">
@@ -266,7 +288,6 @@ require('header.php');
 						<div>年</div>
 						<div>
 							<select name="g_month">
-									<option value="0" <?php if(empty(getBillFormData('g_month'))) echo 'selected="selected"'; ?>>▶︎選択してください</option> 
 									<option value="1" <?php if(getBillFormData('g_month') == 1) { echo 'selected="selected"'; }else if(date('n') == 1){ echo 'selected="selected"'; } ?>>1</option>
 									<option value="2" <?php if(getBillFormData('g_month') == 2) { echo 'selected="selected"'; }else if(date('n') == 2){ echo 'selected="selected"'; } ?>>2</option>
 									<option value="3" <?php if(getBillFormData('g_month') == 3) { echo 'selected="selected"'; }else if(date('n') == 3){ echo 'selected="selected"'; } ?>>3</option>
@@ -284,7 +305,6 @@ require('header.php');
 						<div>月</div>
 						<div>
                            <select name="g_date">
-                                <option value="0" <?php if(empty(getBillFormData('g_date'))) echo 'selected="selected"'; ?>>▶︎選択してください</option> 
                                 <?php
                                 for($i = 1; $i < 32; $i++){
                                 ?>
@@ -340,7 +360,7 @@ require('header.php');
             	<div class="prof_whole_right">
             		<div class="p_w_r_left">
                			<div class="p_w_r_left_option1">
-                <input type="text" name="totalCost" value="<?php if(!empty($_POST['totalCost'])) echo $_POST['totalCost']; ?>">
+                			<input type="text" name="totalCost" value="<?php if(!empty($_POST['totalCost'])) echo $_POST['totalCost']; ?>">
                 		</div>
                 		<div class="p_w_r_left_option2">円
 						</div>
@@ -387,7 +407,7 @@ require('header.php');
             		<div class="img_wrap">
              			<div class="img_upload_left">
             				<!--  profile写真 -->
-            				<div><img src="<?php echo $val['pic']; ?>" alt="profile" class="img_prev"></div>
+            				<div><img src="<?php if(!empty($val['pic'])){ echo $val['pic']; }else{ echo 'images/noimage.jpeg';}  ?>" alt="profile" class="img_prev"></div>
 							<div><?php echo $val['nickname']; ?></div>
 						</div>
            				<div class="img_upload_check">
@@ -435,7 +455,7 @@ require('header.php');
             	<div class="prof_whole_right">
             		<div class="img_wrap">
             			<div class="img_upload_left">
-            				<img src="<?php if(!empty(getBillFormData('receipt'))){ echo getBillFormData('receipt');}else{ echo "images/noimage.jpeg"; } ?>" alt="profile" class="img_prev">
+            				<img src="<?php if(!empty(getBillFormData('receipt'))){ echo getBillFormData('receipt');}else{ echo "images/noimage2.jpg"; } ?>" alt="profile" class="img_prev">
 						</div>
             			<div class="img_upload_right">
 							<div class="img_upload_btn">
