@@ -48,7 +48,7 @@ if(!empty($_POST)){
         validSame($pass_new, $pass_new_re, 'pass_new');
         //新しいパスワードと古いパスワードが同じかチェック
         if($pass_old === $pass_new){
-            $err_msg['pass_new'] = MSG11;
+            $err_msg['pass_old'] = MSG11;
         }
 
         if(empty($err_msg)){
@@ -121,7 +121,7 @@ require('header.php');
            <div class="form_main_wrap">
            
             <div class="area-msg<?php if(!empty($err_msg['common'])) echo $err_msg['common']; ?> form_wide_option">
-                <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
+                <?php if(!empty($err_msg['common'])) echo $err_msg['common']; ?>
             </div>
 
             <label>
@@ -131,7 +131,7 @@ require('header.php');
             </div>
             </label>
             <div class="area-msg form_wide_option">
-                <?php if(!empty($_POST['pass_old'])) echo $err_msg['pass_old']; ?>
+                <?php if(!empty($err_msg['pass_old'])) echo $err_msg['pass_old']; ?>
             </div>
 
            <label>
@@ -141,7 +141,7 @@ require('header.php');
             </div>
             </label>
             <div class="area-msg form_wide_option">
-                <?php if(!empty($_POST['pass_new'])) echo $err_msg['pass_new']; ?>
+                <?php if(!empty($err_msg['pass_new'])) echo $err_msg['pass_new']; ?>
             </div>
 
            <label>
@@ -151,7 +151,7 @@ require('header.php');
             </div>
             </label>
             <div class="area-msg form_wide_option">
-                <?php if(!empty($_POST['pass_new_re'])) echo $err_msg['pass_new_re']; ?>
+                <?php if(!empty($err_msg['pass_new_re'])) echo $err_msg['pass_new_re']; ?>
             </div>
             
             </div>
