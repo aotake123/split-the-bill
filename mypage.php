@@ -38,7 +38,7 @@ $dbMemberData = getMemberdata($_SESSION['user_id'],$group_name);
 //表示件数
 $listSpan = 5;
 //自分用の割り勘データを取得
-$myBillData = getMyNewBills($_SESSION['user_id'],$group_name);
+$myBillData = getMyNewBills($_SESSION['user_id'],$group_name,$listSpan);
 
 //最新の割り勘表示機能(追加搭載予定)
 //==============================
@@ -112,7 +112,7 @@ require('header.php');
                 <div class="prof_whole_right">
                     <div class="img_wrap">
                         <div class="img_upload_left">
-                            <img src="<?php echo $val['pic']; ?>" alt="profile" class="img_prev">
+                            <img src="<?php if(!empty($val['pic'])){ echo $val['pic']; }else{ echo 'images/noimage.jpeg';}  ?>" alt="profile" class="img_prev"></a>
                         </div>
 
                         <div class="graph">
