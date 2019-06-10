@@ -4,7 +4,7 @@
 require('function.php');
 
 debug('「「「「「「「「「「「「「「「「「「「「「「「「「「');
-debug('マイページ');
+debug('割り勘一覧画面');
 debug('「「「「「「「「「「「「「「「「「「「「「「「「「「');
 debugLogStart();
 
@@ -14,8 +14,16 @@ require('auth.php');
 //==============================
 // 割り勘一覧画面処理
 //==============================
+//現在いるページのGETパラメータを取得(デフォルトは1ページ目)
+$currentPageNum = (!empty($_GET['p'])) ? $_GET['p'] : 1;
 //自分のデータのみを抜粋する為のIDデータを取得
 $u_id = $_SESSION['user_id'];
+// パラメータに不正な値が入っているかチェック
+if(!is_int((int)$currentPageNum)){
+    error_log('エラー発生:指定ページに不正な値が入りました');
+    header("Location:mypage.php"); //トップページへ
+  }
+
 //DBから所属グループデータを取得(グループ名表示用)
 $dbGroupData = getMyGroup($_SESSION['user_id']);
 //今何月かを示す関数
@@ -30,20 +38,16 @@ $group_name = $dbFormData['group_name'];
 $dbMemberData = getMemberdata($_SESSION['user_id'],$group_name);
     //debug('グループメンバーデータの情報：'.print_r($dbMemberData,true));
 
-//最新の割り勘表示機能
+//ページネーション関連
 //==============================
 //表示件数
-$listSpan = 5;
+$listSpan = 20;
+//現在の表示レコード先頭を算出
+$currentMinNum = (($currentPageNum-1)*$listSpan); //1ページ目なら(1−1)*20 = 0、2ページ目なら(2−1)*20 = 20
 //グループ内の全ての割り勘データを取得
-$allBillData = getAllBills($group_name);
-    //debug('グループ内の全ての割り勘データを取得：'.print_r($allBillData,true));
+$allBillData = getAllBills($currentMinNum,$group_name,$m_id,$listSpan);
+    debug('グループ内の全ての割り勘データを取得：'.print_r($allBillData,true));
 
-
-//自分の最新割勘のgetパラメータ
-//自分の最新コメントのgetパラメータ
-//割勘当月最新情報のDB回収配列
-//自分の最新割勘のDB回収配列
-//自分の最新コメントのDB回収配列
 ?>
 
 <?php
@@ -114,6 +118,17 @@ require('header.php');
         </div>
 
 
+        <div class="search-title">
+            <div class="search-left">
+                <span class="total-num"><?php echo sanitize($allBillData['total']); ?></span>件の割り勘履歴が見つかりました
+            </div>
+            <div class="search-right">
+                <span class="num"><?php echo $currentMinNum+1; ?></span> - <span class="num"><?php echo $currentMinNum+$listSpan; ?></span>件 / <span class="num"><?php echo sanitize($allBillData['total']); ?></span>件中
+            </div>
+        </div>
+
+
+
         <div class="reco_wrap">
             <table class="record">
                 <thead><tr>
@@ -126,7 +141,8 @@ require('header.php');
                 </tr>
 
                 <?php
-               foreach($allBillData as $key => $val):
+               foreach($allBillData['data'] as $key => $val):
+                //debug('$allBillDataを取得：'.print_r($allBillData,true));
                ?>
 
                 <tr>
@@ -159,10 +175,10 @@ require('header.php');
 
 
                 </thead>
-            </table>           
+            </table>
+            <?php pagination($currentPageNum, $allBillData['total_page'], $group_name); ?>       
         </div>
 
- 
 
             
             </div>
