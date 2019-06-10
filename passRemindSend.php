@@ -77,7 +77,7 @@ EOT;
                     $_SESSION['auth_key'] = $auth_key;
                     $_SESSION['auth_email'] = $email;
                     $_SESSION['auth_key_limit'] = time()+(60*30);
-                    debug('SESSION情報(開発中のみ)：'.print_r($_SESSION,true));
+                    debug('SESSION情報(開発中のみ表示)：'.print_r($_SESSION,true));
 
 
                     header("Location:passRemindRecieve.php");
@@ -124,8 +124,8 @@ require('header.php');
            <div class="form_main">
            <div class="form_main_wrap">
            
-            <div class="area-msg">
-                <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
+            <div class="area-msg form_wide_option">
+                <?php if(!empty($err_msg['common'])) echo $err_msg['common']; ?>
             </div>
 
             <label>
@@ -134,13 +134,13 @@ require('header.php');
                 <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo $_POST['email']; ?>">
             </div>
             </label>
-            <div class="area-msg">
-                <?php if(!empty($_POST['email'])) echo $err_msg['email']; ?>
+            <div class="area-msg form_wide_option">
+                <?php if(!empty($err_msg['email'])) echo $err_msg['email']; ?>
             </div>
-            
+
             </div>
            </div>
-           
+
             <div class="form_submit form_wide_option_submit">
                 <input type="submit" value="認証メールを送る">
             </div>

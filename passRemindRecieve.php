@@ -130,8 +130,8 @@ require('header.php');
            <div class="form_main">
            <div class="form_main_wrap">
            
-            <div class="area-msg">
-                <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
+            <div class="area-msg form_wide_option">
+                <?php if(!empty($err_msg['common'])) echo $err_msg['common']; ?>
             </div>
 
             <label>
@@ -140,8 +140,8 @@ require('header.php');
                 <input type="password" name="auth" value="<?php if(!empty($_POST['auth'])) echo $_POST['auth']; ?>">
             </div>
             </label>
-            <div class="area-msg">
-                <?php if(!empty($_POST['auth'])) echo $err_msg['auth']; ?>
+            <div class="area-msg form_wide_option">
+                <?php if(!empty($err_msg['auth'])) echo $err_msg['auth']; ?>
             </div>
             
             </div>
