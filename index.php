@@ -35,7 +35,7 @@ if(!empty($_POST)){
         //validSame($pass,$pass_re,'pass');
         //半角文字かチェック
         validHalf($pass,'pass');
-
+    
         if(empty($err_msg)){
             debug('バリデーションOK');
             try{
@@ -43,7 +43,7 @@ if(!empty($_POST)){
             $dbh = dbConnect();
             $sql = 'INSERT INTO users (email,pass,createDate) VALUE (:email,:pass,:createDate)';
             $data = array(':email' => $email, ':pass' => password_hash($pass,PASSWORD_DEFAULT),
-                          ':createDate' => date('Y-m-s H:m:s'));
+                          ':createDate' => date('Y-m-d H:i:s'));
 
             //クエリ実行
             $stmt = queryPost($dbh,$sql,$data);
@@ -105,15 +105,16 @@ require('header.php');
 
       <section class="contents_right">
         <div class="contents_right_wrap">
+
         <form class="form" action="" method="post">
            <div class="form_title_wrap">
                <div class="form_title_subject"><h2>新規登録はこちら</h2></div>
            </div>
            <div class="form_main">
            <div class="form_main_wrap">
-           
-            <div class="area-msg">
-                <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
+
+           <div class="err_msg">
+                <?php if(!empty($_POST['common'])) echo $err_msg['common'] .'<br/>'; ?>
             </div>
 
             <label>
@@ -123,7 +124,7 @@ require('header.php');
             </div>
             </label>
             <div class="area-msg">
-                <?php if(!empty($_POST['email'])) echo $err_msg['email']; ?>
+                <?php if(!empty($err_msg['email'])) echo $err_msg['email']; ?>
             </div>
             
             <label>
@@ -133,7 +134,7 @@ require('header.php');
             </div>
             </label>
             <div class="area-msg">
-                <?php if(!empty($_POST['pass'])) echo $err_msg['pass']; ?>
+               <?php if(!empty($err_msg['pass'])) echo $err_msg['pass']; ?>
             </div>
             
             </div>
