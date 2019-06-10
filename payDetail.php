@@ -21,16 +21,8 @@ $isClaim = (!empty($_GET['isc_id'])) ? 1 : 0;
 //GETパラメータ取得
 $s_id = (!empty($_GET['s_id'])) ? $_GET['s_id'] : '';
 //DBから割り勘固有データを取得
-$dbBillData = (!empty($s_id)) ? getSplitbill($_SESSION['user_id'], $s_id) : null;
+$dbBillData = (!empty($s_id)) ? getSplitbillDetail($s_id) : null;
 debug('割り勘データ：'.print_r($dbBillData,true));
-
-//パラメータ改ざんチェック
-//==============================
-//GETパラメータはあるが、改ざんされている（URLをいじくった）場合、正しい対局データが取れないのでマイページへ遷移させる
-if(!empty($s_id) && empty($dbBillData)){
-	debug('GETパラメータのIDが違います。');
-	header("Location:mypage.php"); //マイページへ
-}
 
 //割り勘の項目（実際に表示する日本語抜粋）を取得
 $dbItemName = getItemName($s_id);
@@ -199,7 +191,7 @@ require('header.php');
             	<div class="prof_whole_right">
             		<div class="img_wrap">
             			<div class="img_upload_left">
-							<img src="<?php if(!empty($dbBillData['receipt'])){ echo $dbBillData['receipt']; }else{ echo 'images/noimage.jpeg';}  ?>" alt="profile" class="img_prev_detail"></a>
+							<img src="<?php if(!empty($dbBillData['receipt'])){ echo $dbBillData['receipt']; }else{ echo 'images/noimage2.jpg';}  ?>" alt="profile" class="img_prev_detail"></a>
 						</div>
             			<div class="img_upload_right">
             			</div>
@@ -227,6 +219,7 @@ require('header.php');
            </div>
            
            	<div class="prof_whole">
+			    <!-- SESSION_IDと商品詳細データの記入したユーザーIDが同一の時に限り、編集ボタンへのリンクを表示する -->
 				<!-- <p class="form_last_comment"><a href="payEditSeparate.php?s_id=<?php echo $s_id; ?>">割り勘の内容を編集する</a></p> -->
 			</div>
 
