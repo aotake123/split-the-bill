@@ -37,30 +37,37 @@ if(!empty($_POST)){
 	$email = $_POST['email'];
 
 	//画像アップロードし、パスを文字列で格納
-	$picture = ( !empty($_FILES['pic']['name']) ) ? uploadImg($_FILES['pic'],'pic') : null;
+	$picture = (!empty($_FILES['pic']['name'])) ? uploadImg($_FILES['pic'],'pic') : NULL;
 	debug('FILES情報：'.print_r($_FILES,true));
 	//画像をPOSTしてない（登録していない）が、DBには既に登録されている場合、DBのパスを入れて画像を表示する
 	$picture = ( empty($picture) && !empty($dbFormData['pic']) ) ? $dbFormData['pic'] : $picture;
-	debug('picture情報：'.print_r($picture,true));
 
 	//DBの情報と入力情報が異なる場合にバリデーションを行う
 	if($dbFormData['nickname'] !== $nickname){
+		debug('picture情報：'.print_r($picture,true));
+
 		//ニックネームの最大文字数チェック
-		validMaxLen($nickname,'nickname');
+		validMaxLen2($nickname,'nickname');
+		debug('picture情報：'.print_r($picture,true));
 	}
 	if($dbFormData['group_name'] !== $group_name){
-		//所属グループ（未選択は認めない、新規項目による画面遷移有り）
+				//所属グループ（未選択は認めない、新規項目による画面遷移有り）
+				//デモ段階の為未実装。一般公開やサービス段階で再考
+				//validSelect($group_name,'group_name');
+				debug('err_msg情報：'.print_r($err_msg,true));
 	}
 	if($dbFormData['email'] !== $email){
-		//Emailの最大文字数チェック
-		validMaxLen($email,'email');
+				//Emailの最大文字数チェック
+				validMaxLen($email,'email');
+				//emailの形式チェック
+				validEmail($email,'email');
+				validRequired($email,'email');
+				debug('err_msg情報：'.print_r($err_msg,true));
+
 		if(empty($err_msg['email'])){
 			//Emailの重複チェックする
 			validEmailDup($email,'email');
 		}
-		//emailの形式チェック
-		validEmail($email,'email');
-		validRequired($email,'email');
 	}
 
 	if(empty($err_msg)){
@@ -73,10 +80,6 @@ if(!empty($_POST)){
 					$sql = 'UPDATE users SET nickname = :nickname, group_name = :group_name, pic = :pic, email = :email
 									WHERE id = :u_id';
 					$data = array(':nickname' => $nickname, ':group_name' => $group_name, ':pic' => $picture, ':email' => $email, ':u_id' => $_SESSION['user_id']);
-				//}else{	新規と編集の必要性を確認
-					//$sql = '';
-					//$data = array();
-
 				//クエリ実行関数
 					$stmt = queryPost($dbh,$sql,$data);
 					//クエリ成功の場合
@@ -117,8 +120,11 @@ require('header.php');
            <div class="form_main">
            <div class="form_main_wrap">
 
-            <div class="area-msg">
-                <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
+            <div class="area-msg form_wide_option">
+				<?php if(!empty($err_msg['common'])) echo '・' .$err_msg['common'] .'<br/>'; ?>
+				<?php if(!empty($err_msg['nickname'])) echo '・' .$err_msg['nickname'] .'<br/>'; ?>
+                <?php if(!empty($err_msg['group_name'])) echo '・' .$err_msg['group_name'] .'<br/>'; ?>
+                <?php if(!empty($err_msg['email'])) echo '・' .$err_msg['email'] .'<br/>'; ?>
             </div>
             
             <div class="prof_whole prof_whole_line">
@@ -146,7 +152,7 @@ require('header.php');
             	<div class="prof_whole_right">
             		<div class="img_wrap">
             			<div class="img_upload_left">
-            				<img src="<?php echo getFormData('pic'); ?>" alt="profile" class="img_prev">
+							<img src="<?php if(!empty(getFormData('pic'))){ echo getFormData('pic'); }else{ echo 'images/noimage.jpeg';}  ?>" alt="profile" class="img_prev"></a>
 						</div>
             			<div class="img_upload_right">
 							<div class="img_upload_btn">
