@@ -84,7 +84,6 @@ if(!empty($_POST)){
         } catch(Exception $e){
             error_log('エラー発生：' . $e->getMessage());
             $err_msg['common'] = MSG07;
-            header("Location:login.php");
         }
     }     
 }
@@ -115,7 +114,7 @@ require('header.php');
            <div class="form_main_wrap">
            
             <div class="area-msg">
-                <?php if(!empty($_POST['common'])) echo $err_msg['common']; ?>
+                <?php if(!empty($err_msg['common'])) echo $err_msg['common']; ?>
             </div>
 
             <label>
@@ -125,7 +124,7 @@ require('header.php');
             </div>
             </label>
             <div class="area-msg">
-                <?php if(!empty($_POST['email'])) echo $err_msg['email']; ?>
+                <?php if(!empty($err_msg['email'])) echo $err_msg['email']; ?>
             </div>
             
             <label>
@@ -135,7 +134,7 @@ require('header.php');
             </div>
             </label>
             <div class="area-msg">
-                <?php if(!empty($_POST['pass'])) echo $err_msg['pass']; ?>
+                <?php if(!empty($err_msg['pass'])) echo $err_msg['pass']; ?>
             </div>
             <label>
                 <span class="form_subtitle">
