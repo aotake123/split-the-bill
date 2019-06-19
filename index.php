@@ -8,6 +8,19 @@ debug('ユーザー登録ページ');
 debug('「「「「「「「「「「「「「「「「「「「「「「「「「「');
 debugLogStart();
 
+//ログインしている場合、マイページへ飛ばす
+if(!empty($_SESSION['login_date'])){
+    if(($_SESSION['login_date'] + $_SESSION['login_limit']) > time()){
+        //最終ログイン時間を現在の時刻に変更
+        $_SESSION['login_date'] = time();
+        //ログイン有効期限以内なので、マイページに飛ばす
+        header("Location:mypage.php");
+    }else{
+        //ログイン有効期限以外の場合→そのまま（セッションも削除）
+        session_destroy();
+    }
+}
+
 //変数定義
 $email = '';
 $pass = '';
@@ -114,27 +127,27 @@ require('header.php');
            <div class="form_main_wrap">
 
            <div class="err_msg">
-                <?php if(!empty($_POST['common'])) echo $err_msg['common'] .'<br/>'; ?>
+                <?php if(!empty($_POST['common'])) echo sanitize($err_msg['common']) .'<br/>'; ?>
             </div>
 
             <label>
             <span class="form_subtitle">Email</span>
             <div class="form_input">
-                <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo $_POST['email']; ?>">
+                <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo sanitize($_POST['email']); ?>">
             </div>
             </label>
             <div class="area-msg">
-                <?php if(!empty($err_msg['email'])) echo $err_msg['email']; ?>
+                <?php if(!empty($err_msg['email'])) echo sanitize($err_msg['email']); ?>
             </div>
             
             <label>
             <span class="form_subtitle">パスワード</span>
             <div class="form_input">
-                <input type="password" name="pass" value="<?php if(!empty($_POST['pass'])) echo $_POST['pass']; ?>">
+                <input type="password" name="pass" value="<?php if(!empty($_POST['pass'])) echo sanitize($_POST['pass']); ?>">
             </div>
             </label>
             <div class="area-msg">
-               <?php if(!empty($err_msg['pass'])) echo $err_msg['pass']; ?>
+               <?php if(!empty($err_msg['pass'])) echo sanitize($err_msg['pass']); ?>
             </div>
             
             </div>
