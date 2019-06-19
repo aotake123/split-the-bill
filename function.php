@@ -71,8 +71,8 @@ define('MSG13','認証キーの有効時間を過ぎています');
 define('MSG14','文字で入力してください');
 define('MSG15','割り勘の総額が、各メンバーの金額を足した合計値と一致していません。');
 define('MSG16','割り勘項目を選択してください。');
-define('MSG17','プロフィールは6文字以内で入力してください');
-define('MSG18','タイトルは10文字以内で入力してください');
+define('MSG17','プロフィールは10文字以内で入力してください');
+define('MSG18','タイトルは20文字以内で入力してください');
 define('MSG19','半角数字で入力してください');
 
 
@@ -103,14 +103,14 @@ function validMaxLen($str,$key,$max = 256){
      } 
 }
 //最大文字数超過確認(プロフニックネーム用)
-function validMaxLen2($str,$key,$max = 6){
+function validMaxLen2($str,$key,$max = 10){
     if(mb_strlen($str) > $max){
        global $err_msg;
        $err_msg[$key] = MSG17;         
     } 
 }
 //最大文字数超過確認(割り勘タイトル用)
-function validMaxLen3($str,$key,$max = 10){
+function validMaxLen3($str,$key,$max = 20){
     if(mb_strlen($str) > $max){
        global $err_msg;
        $err_msg[$key] = MSG18;         
@@ -466,7 +466,6 @@ function getSumTotalCost($u_id, $group_name, $isClaim){
         }else{
             return false;
         }
-
     } catch (Exception $e){
         error_log('エラー発生：' . $e->getMessage());
     }
