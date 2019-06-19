@@ -114,13 +114,13 @@ require('header.php');
            <div class="form_main_wrap">
            
             <div class="area-msg">
-                <?php if(!empty($err_msg['common'])) echo $err_msg['common']; ?>
+                <?php if(!empty($err_msg['common'])) echo sanitize($err_msg['common']); ?>
             </div>
 
             <label>
             <span class="form_subtitle">Email</span>
             <div class="form_input">
-                <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo $_POST['email']; ?>">
+                <input type="text" name="email" value="<?php if(!empty($_POST['email'])) echo sanitize($_POST['email']); ?>">
             </div>
             </label>
             <div class="area-msg">
@@ -130,11 +130,11 @@ require('header.php');
             <label>
             <span class="form_subtitle">パスワード</span>
             <div class="form_input">
-                <input type="password" name="pass" value="<?php if(!empty($_POST['pass'])) echo $_POST['pass']; ?>">
+                <input type="password" name="pass" value="<?php if(!empty($_POST['pass'])) echo sanitize($_POST['pass']); ?>">
             </div>
             </label>
             <div class="area-msg">
-                <?php if(!empty($err_msg['pass'])) echo $err_msg['pass']; ?>
+                <?php if(!empty($err_msg['pass'])) echo sanitize($err_msg['pass']); ?>
             </div>
             <label>
                 <span class="form_subtitle">
