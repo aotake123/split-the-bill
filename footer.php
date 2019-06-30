@@ -6,8 +6,9 @@
     
     <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
     <script>
+        
         $(function(){
-        //テキストエリアカウント
+        //テキストエリアカウント(現在は未実装。割り勘の集計の際に利用)
           var $countUp = $('#js-count'),
               $countView = $('#js-count-view');
           $countUp.on('keyup', function(e){
