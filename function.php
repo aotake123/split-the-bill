@@ -75,7 +75,6 @@ define('MSG17','プロフィールは10文字以内で入力してください')
 define('MSG18','タイトルは20文字以内で入力してください');
 define('MSG19','半角数字で入力してください');
 
-
 define('SUC01','パスワードを変更しました');
 define('SUC02','プロフィールを変更しました');
 define('SUC03','メールを送信しました');
@@ -208,8 +207,6 @@ function validSelect($str,$key){
         $err_msg[$key] = MSG16;
     }
 }
-
-
 
 //==============================
 //DB接続関連
@@ -442,7 +439,7 @@ function getMemberdata($u_id,$group_name){
     }
 }
 
-function getSumTotalCost($u_id, $group_name, $isClaim){
+function getSumTotalCost($u_id, $group_name, $isClaim, $y_id, $m_id){
     debug('メンバー個人の申請した割り勘/支払いのtotalCostの合計情報を返します');
     //例外処理
     try{
@@ -450,12 +447,14 @@ function getSumTotalCost($u_id, $group_name, $isClaim){
         $dbh = dbConnect();
         $sql = 'SELECT SUM(totalCost) FROM payment 
         WHERE group_name = :group_name 
+        AND g_year = :y_id
+        AND g_month = :m_id
         AND users = :users 
         AND isClaim = :isClaim
         AND isDelete = 0
         ';
         $data = array(':group_name' => $group_name, 
-        ':users' => $u_id, 'isClaim' => $isClaim
+        ':users' => $u_id, ':isClaim' => $isClaim, ':y_id' => $y_id, ':m_id' => $m_id
         );
         //クエリ実行
         $stmt = queryPost($dbh, $sql, $data);
@@ -471,7 +470,7 @@ function getSumTotalCost($u_id, $group_name, $isClaim){
     }
 }
 
-function getSumUserCost($u_id, $group_name, $isClaim){
+function getSumUserCost($u_id, $group_name, $isClaim, $y_id, $m_id){
     debug('メンバー個人の申請された割り勘/支払いのuserCostの合計情報を返します');
     //例外処理
     try{
@@ -480,12 +479,14 @@ function getSumUserCost($u_id, $group_name, $isClaim){
         $sql = 'SELECT SUM(splitBill) FROM usersPayment AS up 
         INNER JOIN payment AS p ON up.payment = p.id2
         WHERE group_name = :group_name 
+        AND g_year = :y_id
+        AND g_month = :m_id
         AND up.users = :users 
         AND up.isClaim = :isClaim
         AND up.isDelete = 0 AND p.isDelete = 0
         ';
         $data = array(':group_name' => $group_name, 
-        ':users' => $u_id, ':isClaim' => $isClaim
+        ':users' => $u_id, ':isClaim' => $isClaim, ':y_id' => $y_id, ':m_id' => $m_id
         );
         //クエリ実行
         $stmt = queryPost($dbh, $sql, $data);

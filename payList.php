@@ -28,6 +28,7 @@ if(!is_int((int)$currentPageNum)){
 $dbGroupData = getMyGroup($_SESSION['user_id']);
 //今何月かを示す関数
 $m_id = date('n');
+$y_id = date('Y');
 
 //ユーザーの個人データを取得
 $dbFormData = getUser($_SESSION['user_id']);
@@ -88,11 +89,11 @@ require('header.php');
 
                 <?php
                 //会計の売掛け金を集計して取得
-                $paySum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 0);
-                $paySum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 0);
+                $paySum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 0,$y_id,$m_id);
+                $paySum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 0,$y_id,$m_id);
                 //会計の買い掛け金を集計して取得
-                $catchSum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 1);
-                $catchSum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 1);
+                $catchSum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 1,$y_id,$m_id);
+                $catchSum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 1,$y_id,$m_id);
                 //数字単体のデータ
                 $paySum_range = $paySum1[0]['SUM(totalCost)']+$paySum2[0]['SUM(splitBill)'];
                 $catchSum_range = $catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)'];
