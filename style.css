@@ -195,10 +195,23 @@ header_last_wrap{
 .form_title_subject{
     padding: 15px 15px 5px 15px;
     display: inline-block;
-	border-bottom: 3px solid #684221;
+    border-bottom: 3px solid #684221;
 }
 .line_pink{ border-bottom: 3px solid #ffabe6; }
 .line_blue{ border-bottom: 3px solid #76c3f7; }
+.sort_month1,.sort_month3{
+    padding: 15px 5px 15px 5px;
+    float: left;
+    vertical-align: middle;
+}
+
+.sort_month2,.sort_month4{
+    float: left;
+}
+.sort_wrap{
+    overflow: hidden;
+}
+
 
 .form_main{
     margin: 30px 15px 15px 15px;
