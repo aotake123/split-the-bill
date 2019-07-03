@@ -503,7 +503,7 @@ function getSumUserCost($u_id, $group_name, $isClaim, $y_id, $m_id){
     }
 }
 
-function getMyNewBills($u_id, $group_name,$span){
+function getMyNewBills($u_id, $group_name, $span){
     debug('ユーザーの最新X件の割り勘情報を返します');
     //例外処理
     try{
@@ -615,7 +615,7 @@ function getBillView($u_id,$s_id){
     }
 }
 
-function getAllBills($currentPageNum,$group_name,$m_id,$span){
+function getAllBills($currentPageNum,$group_name,$m_id,$span,$y_id){
     debug('グループ内の全ての割り勘データを取得');
     //例外処理
     try{
@@ -623,10 +623,12 @@ function getAllBills($currentPageNum,$group_name,$m_id,$span){
         $dbh = dbConnect();
         //件数取得のためのSQL作成
         $sql = 'SELECT id FROM payment
-                WHERE isDelete = 0
+                WHERE isDelete = 0 
+                AND g_year = :y_id 
+                AND g_month = :m_id
                 AND group_name = :group_name
                 AND g_month = :g_month';
-        $data = array(':group_name' => $group_name, ':g_month' => $m_id);
+        $data = array(':group_name' => $group_name, ':g_month' => $m_id, ':y_id' => $y_id, ':m_id' => $m_id);
         $stmt = queryPost($dbh, $sql, $data);
         $rst['total'] = $stmt->rowCount(); //総レコード数
         $rst['total_page'] = ceil($rst['total']/$span); //総ページ数 ceilは切り上げ関数（端数も含めてページを出してる）
@@ -666,17 +668,19 @@ function getAllBills($currentPageNum,$group_name,$m_id,$span){
     }
 }
 
-function getMyBillCount($u_id,$group_name){
+function getMyBillCount($u_id,$group_name,$y_id,$m_id){
     debug('指定した個人＆グループ内における、割り勘申請件数を取得');
     try{
         //DB接続
         $dbh = dbConnect();
         $sql = 'SELECT id,group_name,users,isDelete FROM payment
         WHERE group_name = :group_name
+        AND g_year = :y_id AND g_month = :m_id 
         AND users = :u_id
         AND isDelete = 0
         ';
-        $data = array(':u_id' => $u_id, ':group_name' => $group_name);
+        $data = array(':u_id' => $u_id, ':group_name' => $group_name, 
+        ':y_id' => $y_id, ':m_id' => $m_id);
         //クエリ実行
         $stmt = queryPost($dbh, $sql, $data);
         

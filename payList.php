@@ -46,9 +46,8 @@ $listSpan = 20;
 //現在の表示レコード先頭を算出
 $currentMinNum = (($currentPageNum-1)*$listSpan); //1ページ目なら(1−1)*20 = 0、2ページ目なら(2−1)*20 = 20
 //グループ内の全ての割り勘データを取得
-$allBillData = getAllBills($currentMinNum,$group_name,$m_id,$listSpan);
+$allBillData = getAllBills($currentMinNum,$group_name,$m_id,$listSpan,$y_id,$m_id);
     debug('グループ内の全ての割り勘データを取得：'.print_r($allBillData,true));
-
 ?>
 
 <?php
@@ -69,116 +68,125 @@ require('header.php');
 
         <form class="form" action="" method="post">
             <div class="form_title_wrap">
-                <div class="form_title_subject line_blue"><h2>TERRACE厚木の<?php echo $m_id; ?>月の割り勘一覧</h2></div>
+                <div class="form_title_subject line_blue">
+                    <div class="sort_month1"><h2>TERRACE厚木の</h2></div>
+                    <div class="sort_month2">
+                        <select name="sort_month">
+                            <option value="201906" <?php if($y_id === 2019 && $m_id === 6) echo 'selected="selected"'; ?>>2019年6月</option>
+                            <option value="201907" <?php if($y_id === 2019 && $m_id === 7) echo 'selected="selected"'; ?>>2019年7月</option>
+                        </select>
+                    </div>
+                    <div class="sort_month3"><h2>の割り勘一覧</h2></div>
+                    <div class="sort_month4"><input type="submit" class="" name="btn" value="送信"><div>
+                </div>
             </div>
+            </div>
+            
             <div class="form_main">
             <div class="form_main_wrap">
 
             <div class="reco_wrap reco_option">
-            <table class="record">
-                <thead><tr>
-                <th class="reco_personal">メンバー名</th>
-                <th class="reco_money_month">収支総額</th>
-                <th class="reco_count">申請した件数</th>
-                <!-- <th class="reco_list">詳細</th> -->
-                </tr>
+                <table class="record">
+                    <thead><tr>
+                    <th class="reco_personal">メンバー名</th>
+                    <th class="reco_money_month">収支総額</th>
+                    <th class="reco_count">申請した件数</th>
+                    <!-- <th class="reco_list">詳細</th> -->
+                    </tr>
 
-                <?php
-               foreach($dbMemberData as $key => $val):
-               ?>
+                    <?php
+                    foreach($dbMemberData as $key => $val):
+                    ?>
 
-                <?php
-                //会計の売掛け金を集計して取得
-                $paySum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 0,$y_id,$m_id);
-                $paySum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 0,$y_id,$m_id);
-                //会計の買い掛け金を集計して取得
-                $catchSum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 1,$y_id,$m_id);
-                $catchSum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 1,$y_id,$m_id);
-                //数字単体のデータ
-                $paySum_range = $paySum1[0]['SUM(totalCost)']+$paySum2[0]['SUM(splitBill)'];
-                $catchSum_range = $catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)'];
-                $totalSum_range = -$paySum1[0]['SUM(totalCost)']-$paySum2[0]['SUM(splitBill)']+$catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)'];
-                ?>
+                    <?php
+                    //会計の売掛け金を集計して取得
+                    $paySum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 0,$y_id,$m_id);
+                    $paySum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 0,$y_id,$m_id);
+                    //会計の買い掛け金を集計して取得
+                    $catchSum1 = getSumTotalCost($val['id'],$val['group_name'],$val['isClaim']= 1,$y_id,$m_id);
+                    $catchSum2 = getSumUserCost($val['id'],$val['group_name'],$val['isClaim']= 1,$y_id,$m_id);
+                    //数字単体のデータ
+                    $paySum_range = $paySum1[0]['SUM(totalCost)']+$paySum2[0]['SUM(splitBill)'];
+                    $catchSum_range = $catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)'];
+                    $totalSum_range = -$paySum1[0]['SUM(totalCost)']-$paySum2[0]['SUM(splitBill)']+$catchSum1[0]['SUM(totalCost)']+$catchSum2[0]['SUM(splitBill)'];
+                    ?>
 
-                <tr>
-                <td class="reco_item"><!-- メンバー名 --><?php echo $val['nickname']; ?></td>
-                <td class="reco_item"><?php echo $totalSum_range; ?>円</td>
-                <td class="reco_item">
-                <?php $MyBillCount = getMyBillCount($val['id'],$group_name); ?>
-                <?php echo $MyBillCount; ?>件
-                </td>
-                <!-- <td class="reco_item"><a href="payList.php?u_id=<?php echo $val['id']; ?>">一覧を見る</a></td> -->
-                </tr>
+                    <tr>
+                    <td class="reco_item"><!-- メンバー名 --><?php echo $val['nickname']; ?></td>
+                    <td class="reco_item"><?php echo $totalSum_range; ?>円</td>
+                    <td class="reco_item">
+                    <?php $MyBillCount = getMyBillCount($val['id'],$group_name,$y_id,$m_id); ?>
+                    <?php echo $MyBillCount; ?>件
+                    </td>
+                    <!-- <td class="reco_item"><a href="payList.php?u_id=<?php echo $val['id']; ?>">一覧を見る</a></td> -->
+                    </tr>
 
-                <?php
-                endforeach;
-                ?>
+                    <?php
+                    endforeach;
+                    ?>
 
-                </thead>
-            </table>           
-        </div>
-
-
-        <div class="search-title">
-            <div class="search-left">
-                <span class="total-num"><?php echo sanitize($allBillData['total']); ?></span>件の割り勘履歴が見つかりました
+                    </thead>
+                </table>           
             </div>
-            <div class="search-right">
-                <span class="num"><?php echo $currentMinNum+1; ?></span> - <span class="num"><?php echo $currentMinNum+$listSpan; ?></span>件 / <span class="num"><?php echo sanitize($allBillData['total']); ?></span>件中
+
+            <div class="search-title">
+                <div class="search-left">
+                    <span class="total-num"><?php echo sanitize($allBillData['total']); ?></span>件の割り勘履歴が見つかりました
+                </div>
+                <div class="search-right">
+                    <span class="num"><?php echo $currentMinNum+1; ?></span> - <span class="num"><?php echo $currentMinNum+$listSpan; ?></span>件 / <span class="num"><?php echo sanitize($allBillData['total']); ?></span>件中
+                </div>
             </div>
-        </div>
+
+            <div class="reco_wrap">
+                <table class="record">
+                    <thead><tr>
+                    <th class="reco_date">日時</th>
+                    <th class="reco_title">割り勘タイトル</th>
+                    <th class="reco_total">総額</th>
+                    <th class="reco_request">割り勘の申請者</th>
+                    <!-- <th class="reco_billcount">割り勘の<br />関係者数</th> -->
+                    <th class="reco_detail">詳細</th>
+                    </tr>
+
+                    <?php
+                    foreach($allBillData['data'] as $key => $val):
+                    //debug('$allBillDataを取得：'.print_r($allBillData,true));
+                    ?>
+
+                    <tr>
+                    <td class="reco_item"><?php echo $val['g_year']; ?>/<?php echo $val['g_month']; ?>/<?php echo $val['g_date']; ?></td>
+                    <td class="reco_item"><?php echo $val['title']; ?></td>
+                    <td class="reco_item"><?php echo $val['totalCost']; ?>円</td>
+                    <td class="reco_item">
+                    <?php $request = getUser($val['users'],$group_name);
+                    //debug('ユーザーの個人データを取得：'.print_r($request,true)); ?>
+                    <?php echo $request['nickname']; ?>
+                    (<?php 
+                        if($val['isClaim'] == 1){
+                            echo 'された側';
+                        }else{ 
+                            echo 'した側';
+                        } ?>)
+                    </td>
+                    <!-- <td class="reco_item">
+                    <?php $splitBillCount = splitBillCount($val['id']);
+                        debug('割り勘の関係者人数データを取得：'.print_r($splitBillCount,true));
+                    ?>
+                    <?php echo $splitBillCountUp; ?>人
+                    </td> -->
+                    <td class="reco_item"><a href="payDetail.php?s_id=<?php echo $val['id']; ?>">詳細を見る</a></td>
+                    </tr>
+
+                    <?php
+                    endforeach;
+                    ?>
 
 
-
-        <div class="reco_wrap">
-            <table class="record">
-                <thead><tr>
-                <th class="reco_date">日時</th>
-                <th class="reco_title">割り勘タイトル</th>
-                <th class="reco_total">総額</th>
-                <th class="reco_request">割り勘の申請者</th>
-                <!-- <th class="reco_billcount">割り勘の<br />関係者数</th> -->
-                <th class="reco_detail">詳細</th>
-                </tr>
-
-                <?php
-               foreach($allBillData['data'] as $key => $val):
-                //debug('$allBillDataを取得：'.print_r($allBillData,true));
-               ?>
-
-                <tr>
-                <td class="reco_item"><?php echo $val['g_year']; ?>/<?php echo $val['g_month']; ?>/<?php echo $val['g_date']; ?></td>
-                <td class="reco_item"><?php echo $val['title']; ?></td>
-                <td class="reco_item"><?php echo $val['totalCost']; ?>円</td>
-                <td class="reco_item">
-                <?php $request = getUser($val['users'],$group_name);
-                //debug('ユーザーの個人データを取得：'.print_r($request,true)); ?>
-                <?php echo $request['nickname']; ?>
-                (<?php 
-                    if($val['isClaim'] == 1){
-                        echo 'された側';
-                    }else{ 
-                        echo 'した側';
-                    } ?>)
-                </td>
-                <!-- <td class="reco_item">
-                <?php $splitBillCount = splitBillCount($val['id']);
-                    debug('割り勘の関係者人数データを取得：'.print_r($splitBillCount,true));
-                ?>
-                <?php echo $splitBillCountUp; ?>人
-                </td> -->
-                <td class="reco_item"><a href="payDetail.php?s_id=<?php echo $val['id']; ?>">詳細を見る</a></td>
-                </tr>
-
-                <?php
-                endforeach;
-                ?>
-
-
-                </thead>
-            </table>
-            <?php pagination($currentPageNum, $allBillData['total_page'], $group_name); ?>       
-        </div>
+                    </thead>
+                </table>
+                <?php pagination($currentPageNum, $allBillData['total_page'], $group_name); ?>       
+            </div>
 
 
             
