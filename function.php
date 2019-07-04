@@ -109,7 +109,7 @@ function validMaxLen2($str,$key,$max = 10){
     } 
 }
 //最大文字数超過確認(割り勘タイトル用)
-function validMaxLen3($str,$key,$max = 20){
+function validMaxLen3($str,$key,$max = 40){
     if(mb_strlen($str) > $max){
        global $err_msg;
        $err_msg[$key] = MSG18;         
@@ -215,9 +215,9 @@ function validSelect($str,$key){
 //DB接続関数
 function dbConnect(){
     //DB接続準備
-    $dsn = 'mysql:dbname=ikizama_splitbill;host=localhost;charset=utf8';
-    $user = 'root';
-    $password = 'root';
+    $dsn = 'mysql:dbname=ikizama_splitbill;host=mysql705b.xserver.jp;charset=utf8';
+    $user = 'ikizama_warikan';
+    $password = 'steel824';
     $options = array(
         //SQL実行時に例外をスロー
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
