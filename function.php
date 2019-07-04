@@ -923,15 +923,15 @@ function pagination( $currentPageNum, $totalPageNum, $link = '', $pageColNum = 5
     echo '<div class="pagination">';
       echo '<ul class="pagination-list">';
         if($currentPageNum != 1){
-          echo '<li class="list-item"><a href="?p=1&p_id='.$link.'">&lt;</a></li>';
+          echo '<li class="list-item"><a href="?p=1&sort_month='.$link.'">&lt;</a></li>';
         }
         for($i = $minPageNum; $i <= $maxPageNum; $i++){
           echo '<li class="list-item ';
           if($currentPageNum == $i ){ echo 'active'; }
-          echo '"><a href="?p='.$i.'&p_id='.$link.'">'.$i.'</a></li>';
+          echo '"><a href="?p='.$i.'&sort_month='.$link.'">'.$i.'</a></li>';
         }
         if($currentPageNum != $maxPageNum){
-          echo '<li class="list-item"><a href="?p='.$maxPageNum.'&p_id='.$link.'">&gt;</a></li>';
+          echo '<li class="list-item"><a href="?p='.$maxPageNum.'&sort_month='.$link.'">&gt;</a></li>';
         }
       echo '</ul>';
     echo '</div>';

@@ -16,6 +16,8 @@ require('auth.php');
 //==============================
 //現在いるページのGETパラメータを取得(デフォルトは1ページ目)
 $currentPageNum = (!empty($_GET['p'])) ? $_GET['p'] : 1;
+//年月データ
+$ym_id = (!empty($_GET['sort_month'])) ? $_GET['sort_month'] : '';
 //自分のデータのみを抜粋する為のIDデータを取得
 $u_id = $_SESSION['user_id'];
 // パラメータに不正な値が入っているかチェック
@@ -27,8 +29,19 @@ if(!is_int((int)$currentPageNum)){
 //DBから所属グループデータを取得(グループ名表示用)
 $dbGroupData = getMyGroup($_SESSION['user_id']);
 //今何月かを示す関数
-$m_id = date('n');
-$y_id = date('Y');
+if(empty($ym_id)){
+    $m_id = date('n');
+    $y_id = date('Y');    
+}else{
+    $y_id = substr($ym_id,0,4);
+    $m_id = substr($ym_id,5,2);
+    $m_id = sprintf('%02d',(int)$m_id);
+}
+$ym_id = $y_id.$m_id;
+//debug('all：'.print_r($ym_id,true));
+//debug('year：'.print_r($y_id,true));
+//debug('month：'.print_r($m_id,true));
+
 
 //ユーザーの個人データを取得
 $dbFormData = getUser($_SESSION['user_id']);
@@ -48,6 +61,10 @@ $currentMinNum = (($currentPageNum-1)*$listSpan); //1ページ目なら(1−1)*2
 //グループ内の全ての割り勘データを取得
 $allBillData = getAllBills($currentMinNum,$group_name,$m_id,$listSpan,$y_id,$m_id);
     debug('グループ内の全ての割り勘データを取得：'.print_r($allBillData,true));
+
+
+
+
 ?>
 
 <?php
@@ -66,18 +83,18 @@ require('header.php');
 
         <div class="main_1colum_wide2">
 
-        <form class="form" action="" method="post">
+        <form class="form" action="" method="get">
             <div class="form_title_wrap">
                 <div class="form_title_subject line_blue">
                     <div class="sort_month1"><h2>TERRACE厚木の</h2></div>
                     <div class="sort_month2">
                         <select name="sort_month">
-                            <option value="201906" <?php if($y_id === 2019 && $m_id === 6) echo 'selected="selected"'; ?>>2019年6月</option>
-                            <option value="201907" <?php if($y_id === 2019 && $m_id === 7) echo 'selected="selected"'; ?>>2019年7月</option>
+                            <option value="201906" <?php if($y_id == 2019 && $m_id == 06) echo 'selected="selected"'; ?>>2019年6月</option>
+                            <option value="201907" <?php if($y_id == 2019 && $m_id == 07) echo 'selected="selected"'; ?>>2019年7月</option>
                         </select>
                     </div>
                     <div class="sort_month3"><h2>の割り勘一覧</h2></div>
-                    <div class="sort_month4"><input type="submit" class="" name="btn" value="送信"><div>
+                    <div class="sort_month4"><input type="submit" class="" name="" value="更新"><div>
                 </div>
             </div>
             </div>
@@ -185,7 +202,7 @@ require('header.php');
 
                     </thead>
                 </table>
-                <?php pagination($currentPageNum, $allBillData['total_page'], $group_name); ?>       
+                <?php pagination($currentPageNum, $allBillData['total_page'], $ym_id); ?>       
             </div>
 
 
