@@ -37,8 +37,9 @@ if(empty($ym_id)){
     $m_id = substr($ym_id,5,2);
     $m_id = sprintf('%02d',(int)$m_id);
 }
-$ym_id = $y_id.$m_id;
-//debug('all：'.print_r($ym_id,true));
+
+//$ym_id = $y_id.$m_id;
+debug('all：'.print_r($ym_id,true));
 //debug('year：'.print_r($y_id,true));
 //debug('month：'.print_r($m_id,true));
 
@@ -89,8 +90,9 @@ require('header.php');
                     <div class="sort_month1"><h2>TERRACE厚木の</h2></div>
                     <div class="sort_month2">
                         <select name="sort_month">
-                            <option value="201906" <?php if($y_id == 2019 && $m_id == 06) echo 'selected="selected"'; ?>>2019年6月</option>
-                            <option value="201907" <?php if($y_id == 2019 && $m_id == 07) echo 'selected="selected"'; ?>>2019年7月</option>
+                            <option value="201906" <?php if($y_id === "2019" && $m_id === "06") echo 'selected="selected"'; ?>>2019年6月</option>
+                            <option value="201907" <?php if($y_id === "2019" && $m_id === "07") echo 'selected="selected"'; ?>>2019年7月</option>
+                            <option value="201908" <?php if($y_id === "2019" && $m_id === "08") echo 'selected="selected"'; ?>>2019年8月</option>
                         </select>
                     </div>
                     <div class="sort_month3"><h2>の割り勘一覧</h2></div>
