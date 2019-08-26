@@ -14,7 +14,8 @@
           $countUp.on('keyup', function(e){
               $countView.html($(this).val().length);
           });
-        }):
+        });
     </script>
+    <script src="slider.js"></script>
   </body>  
 </html>
