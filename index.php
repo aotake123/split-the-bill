@@ -110,8 +110,14 @@ require('header.php');
               楽しい共同生活をしよう</p>
           </div>
           <div class="m_i_right">
-            <img src="images/main_image.jpg"
-             class="main_image_jpg" alt="main_image">
+            <i class="fa fa-angle-left slider__nav slider__prev js-slide-prev" aria-hidden="true"></i>
+            <i class="fa fa-angle-right slider__nav slider__next js-slide-next" aria-hidden="true"></i>
+            <ul class="slider__container">
+                <li class="slider__item slider__item1"><img src="images/main_image1.jpg" class="main_image_jpg" alt="main_image"></li>
+                <li class="slider__item slider__item2"><img src="images/main_image2.jpg" class="main_image_jpg" alt="main_image"></li>
+                <li class="slider__item slider__item3"><img src="images/main_image3.jpg" class="main_image_jpg" alt="main_image"></li>
+                <li class="slider__item slider__item4"><img src="images/main_image4.jpg" class="main_image_jpg" alt="main_image"></li>
+            </ul>
           </div>
         </div>
       </section>
