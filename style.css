@@ -127,9 +127,6 @@ header_last_wrap{
 .main_image_jpg{
     width: 240px;
     height: 160px;
-    top: 10px;
-    right: 10px;
-    border-radius: 3px;
 }
 .m_v_left{
     top: 30px;
@@ -138,9 +135,40 @@ header_last_wrap{
     float: left;
 }
 .m_i_right{
-    text-align: center;
-    padding: 20px 20px 20px 0;
+    width: 240px;
+    height: 160px;
+
+    padding: 20px 0px 20px 0;
+    margin-right: 20px;
+    overflow: hidden;
+    position: relative;
+}
+.slider__container{
+    padding: 0;
+    overflow: hidden;
+    margin: 0;
+    list-style: none;
+    position: absolute;
+}
+.slider__item{
+    width: 240px;
+    height: 160px;
     float: left;
+    text-align: center;
+}
+.slider__nav{
+    color:#f5f4f3;
+    position: absolute;
+    top: 90px;
+    font-size: 40px !important;
+    cursor: pointer;
+    z-index: 2;
+}
+.slider__prev{
+    left: 10px;
+}
+.slider__next{
+    right: 10px;
 }
 
 .catch_copy{
