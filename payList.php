@@ -64,8 +64,6 @@ $allBillData = getAllBills($currentMinNum,$group_name,$m_id,$listSpan,$y_id,$m_i
     debug('グループ内の全ての割り勘データを取得：'.print_r($allBillData,true));
 
 
-
-
 ?>
 
 <?php
@@ -93,6 +91,10 @@ require('header.php');
                             <option value="201906" <?php if($y_id === "2019" && $m_id === "06") echo 'selected="selected"'; ?>>2019年6月</option>
                             <option value="201907" <?php if($y_id === "2019" && $m_id === "07") echo 'selected="selected"'; ?>>2019年7月</option>
                             <option value="201908" <?php if($y_id === "2019" && $m_id === "08") echo 'selected="selected"'; ?>>2019年8月</option>
+                            <option value="201909" <?php if($y_id === "2019" && $m_id === "09") echo 'selected="selected"'; ?>>2019年9月</option>
+                            <option value="201910" <?php if($y_id === "2019" && $m_id === "10") echo 'selected="selected"'; ?>>2019年10月</option>
+                            <option value="201911" <?php if($y_id === "2019" && $m_id === "11") echo 'selected="selected"'; ?>>2019年11月</option>
+                            <option value="201912" <?php if($y_id === "2019" && $m_id === "12") echo 'selected="selected"'; ?>>2019年12月</option>
                         </select>
                     </div>
                     <div class="sort_month3"><h2>の割り勘一覧</h2></div>
